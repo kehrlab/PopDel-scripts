@@ -1,0 +1,28 @@
+name: delly
+channels:
+  - conda-forge
+  - default
+  - bioconda
+  - r
+  - defaults
+dependencies:
+  - delly=0.7.8=h4037b6b_4
+  - htslib=1.9=hc238db4_4
+  - libdeflate=1.0=h470a237_0
+  - bzip2=1.0.6=h470a237_2
+  - ca-certificates=2018.10.15=ha4d7672_0
+  - curl=7.62.0=h74213dd_0
+  - icu=58.2=hfc679d8_0
+  - krb5=1.16.2=hbb41f41_0
+  - libcurl=7.62.0=hbdb9355_0
+  - libedit=3.1.20170329=haf1bffa_1
+  - libssh2=1.8.0=h5b517e9_2
+  - ncurses=6.1=hfc679d8_1
+  - openssl=1.0.2p=h470a237_1
+  - tk=8.6.8=ha92aebf_0
+  - xz=5.2.4=h470a237_1
+  - zlib=1.2.11=h470a237_3
+  - libboost=1.67.0=h46d08c1_4
+  - libgcc-ng=8.2.0=hdf63c60_1
+  - libstdcxx-ng=8.2.0=hdf63c60_1
+

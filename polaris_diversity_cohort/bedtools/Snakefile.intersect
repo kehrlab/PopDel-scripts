@@ -1,0 +1,125 @@
+configfile: "scripts/bedtools/config.yaml"
+
+
+##### DO NOT TOUCH THIS! ####
+OVERLAP=config["overlap"]
+
+POPDELBED_out=expand("{out}popdel.deletions.{L}-{R}.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"])
+POPDELBED_in=expand("{out}popdel.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
+DELLYBED_out=expand("{out}delly.deletions.{L}-{R}.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"])
+DELLYBED_in=expand("{out}delly.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
+LUMPYBED_out=expand("{out}lumpy.deletions.{L}-{R}.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"])
+LUMPYBED_in=expand("{out}lumpy.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
+
+INTERPOPDELDELLY=expand("{out}intersects/intersect.popdel.delly.bed", out=config["outpath"])
+INTERPOPDELLUMPY=expand("{out}intersects/intersect.popdel.lumpy.bed", out=config["outpath"])
+INTERDELLYLUMPY=expand("{out}intersects/intersect.delly.lumpy.bed", out=config["outpath"])
+INTERPOPDELDELLYLUMPY=expand("{out}intersects/intersect.popdel.delly.lumpy.bed", out=config["outpath"])
+
+
+COUNT=expand("{out}counts.{L}-{R}{c}.{o}.tsv", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"], o=config["overlap"])
+
+##### ^DO NOT TOUCH THIS!^ ####
+
+rule all:
+   input:
+      COUNT
+
+rule vcf2bed_popdel:
+   input:
+      config["vcfs"]["popdel"]
+   output:
+      temp(POPDELBED_out)
+   params:
+      getRange=expand("awk -v OFS='\\t' '{{if ($9 >= {L} && $9 <= {R}){{print$1,$2,$2+$9}}}}'", L=config["left"], R=config["right"])
+   shell:
+      "grep -v ^# {input} | grep -v \"^chrUn\" | grep -v \"random\" | grep -v \"chrY\" | grep -v \"chrX\" | sed 's/;/\\t/g' | sed -e 's;SVLEN=-;;g' | {params.getRange} | sort -u -k1,1 -k2,2n -k3,3n > {output}"
+
+rule vcf2bed_delly:
+   input:
+      config["vcfs"]["delly"]
+   output:
+      temp(DELLYBED_out)
+   params:
+      getRange=expand("awk '{{if($3 - $2 >= {L} && $3 - $2 <= {R}){{print $0}}}}'", L=config["left"], R=config["right"])
+   shell:
+      "grep -v ^# {input} | grep -v \"^chrUn\" | grep -v \"random\" | grep -v \"chrM\" | grep -v \"chrEBV\" | grep -v \"chrY\" | grep -v \"chrX\"  | awk '{{if($5==\"<DEL>\" && $7==\"PASS\"){{print $0}}}}' | sed 's/;/\\t/g' | cut -f 1,2,12 | sed 's/END=//g' | {params.getRange} | sort -u -k1,1 -k2,2n -k3,3n > {output}"
+
+rule vcf2bed_lumpy:
+   input:
+      config["vcfs"]["lumpy"]
+   output:
+      temp(LUMPYBED_out)
+   params:
+      getRange=expand("awk 'OFS=\"\\t\" {{if($3 >= {L} && $3 <= {R}){{print $1,$2,$4}}}}'", L=config["left"], R=config["right"])
+   shell:
+      "grep -v ^# {input} | grep -v \"^chrUn\" | grep -v \"random\" | grep -v \"chrM\" | grep -v \"chrEBV\" | grep -v \"chrY\" | grep -v \"chrX\" | sed 's/;/\\t/g' | cut -f 1,2,9,10 | sed -e 's/END=//g' -e 's;SVLEN=;;g' -e 's;-;;g' | {params.getRange} | sort -u -k1,1 -k2,2n -k3,3n > {output}"
+
+rule centromereFilterCalls:
+   input:
+      calls=expand("{out}{{tool}}.deletions.{L}-{R}.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"]),
+      regions=config["centromereFile"]
+   output:
+      temp(expand("{out}{{tool}}.deletions.{L}-{R}.noDup.bed_noCentromeres", out=config["outpath"], L=config["left"], R=config["right"]))
+   shell:
+      "bedtools intersect -wa -v -a {input.calls} -b {input.regions} > {output}"
+
+rule overlapPopDelX:
+   input:
+      first=POPDELBED_in,
+      second=expand("{out}{{tool, (delly|lumpy)}}.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"]),
+   output:
+      temp(expand("{out}intersects/intersect.popdel.{{tool, (delly|lumpy)}}.bed", out=config["outpath"]))
+   params:
+      OVERLAP
+   shell:
+      "bedtools intersect -wa -u -r -f {params} -a {input.first} -b {input.second} > {output}"
+
+rule overlapDellyLumpy:
+   input:
+      first=DELLYBED_in,
+      second=LUMPYBED_in
+   output:
+      temp(INTERDELLYLUMPY)
+   params:
+      OVERLAP
+   shell:
+      "bedtools intersect -wa -u -r -f {params} -a {input.first} -b {input.second} > {output}"
+
+rule overlapPopDelDellyLumpy:
+   input:
+      first=INTERPOPDELDELLY,
+      second=LUMPYBED_in
+   output:
+      temp(INTERPOPDELDELLYLUMPY)
+   params:
+      OVERLAP
+   shell:
+      "bedtools intersect -wa -u -r -f {params} -a {input.first} -b {input.second} > {output}"
+
+rule getCounts:
+   input:
+      popdel=POPDELBED_in,
+      delly=DELLYBED_in,
+      lumpy=LUMPYBED_in,
+      popdel_delly=INTERPOPDELDELLY,
+      popdel_lumpy=INTERPOPDELLUMPY,
+      delly_lumpy=INTERDELLYLUMPY,
+      popdel_delly_lumpy=INTERPOPDELDELLYLUMPY,
+   output:
+      COUNT
+   shell:
+      """
+      set +o pipefail
+      wc -l {input.popdel} {input.delly} {input.lumpy} | head -n3 > {output}
+      wc -l {input.popdel_delly} {input.popdel_lumpy} {input.delly_lumpy} {input.popdel_delly_lumpy} | head -n4 >> {output}
+
+      sed -i -e \"s;{input.popdel};popdel;g\" \
+       -e \"s;{input.delly};delly;g\" \
+       -e \"s;{input.lumpy};lumpy;g\" \
+       -e \"s;{input.popdel_delly};popdel_delly;g\" \
+       -e \"s;{input.popdel_lumpy};popdel_lumpy;g\" \
+       -e \"s;{input.delly_lumpy};delly_lumpy;g\" \
+       -e \"s;{input.popdel_delly_lumpy};popdel_delly_lumpy;g\" \
+      {output}
+      """

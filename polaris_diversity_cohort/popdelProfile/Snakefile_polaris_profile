@@ -1,0 +1,15 @@
+configfile: "config.yaml"
+
+rule all:
+    input:
+        ancient(config["outProfiles"])
+
+rule profile:
+    input:
+        "bam/bwa.{sample}-N1-DNA1-WGS1.bam"
+    output:
+        "profiles/{sample}.profile"
+    log:
+        "logs/popdel/profile/{sample}_profile.log"
+    shell:
+        "(popdel profile -o {output} {input}) 2> {log}"

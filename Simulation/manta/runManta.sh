@@ -1,0 +1,13 @@
+/usr/bin/time -f "1\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0001.manta.sh
+/usr/bin/time -f "10\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0010.manta.sh
+/usr/bin/time -f "20\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0020.manta.sh
+/usr/bin/time -f "30\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0030.manta.sh
+/usr/bin/time -f "40\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0040.manta.sh
+/usr/bin/time -f "50\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0050.manta.sh
+/usr/bin/time -f "60\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0060.manta.sh
+/usr/bin/time -f "70\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0070.manta.sh
+/usr/bin/time -f "80\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0080.manta.sh
+/usr/bin/time -f "90\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0090.manta.sh
+/usr/bin/time -f "100\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0100.manta.sh
+/usr/bin/time -f "200\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0200.manta.sh
+/usr/bin/time -f "300\t%e\t%U\t%S\t%M" -ao time/manta.time manta/0300.manta.sh

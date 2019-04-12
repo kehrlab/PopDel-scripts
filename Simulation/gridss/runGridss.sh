@@ -1,0 +1,15 @@
+/usr/bin/time -f "1\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0001.gridss.sh
+/usr/bin/time -f "10\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0010.gridss.sh
+/usr/bin/time -f "20\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0020.gridss.sh
+/usr/bin/time -f "30\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0030.gridss.sh
+/usr/bin/time -f "40\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0040.gridss.sh
+/usr/bin/time -f "50\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0050.gridss.sh
+/usr/bin/time -f "60\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0060.gridss.sh
+/usr/bin/time -f "70\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0070.gridss.sh
+/usr/bin/time -f "80\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0080.gridss.sh
+/usr/bin/time -f "90\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0090.gridss.sh
+/usr/bin/time -f "100\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0100.gridss.sh
+/usr/bin/time -f "200\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0200.gridss.sh
+/usr/bin/time -f "300\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0300.gridss.sh
+/usr/bin/time -f "400\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0400.gridss.sh
+/usr/bin/time -f "500\t%e\t%U\t%S\t%M" -ao time/gridss.time gridss/0500.gridss.sh

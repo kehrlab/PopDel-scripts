@@ -1,0 +1,23 @@
+left:
+  500     ## Calls below this size will be excluded
+
+right:
+  10000   ## Calls above this size will be excluded
+
+overlap:
+  0.5
+
+vcfs: ## Paths to the vcf files.
+   popdel: calls/popdel/polaris150.rnd.popdel.vcf
+   delly: calls/delly/polaris150.delly.vcf
+   lumpy: calls/lumpy/polaris150.lumpy.vcf
+
+centromereFile:
+   reference/centromeres.bed
+
+filterCentromeres: ## Use "_noCentromeres" if you want to filter centromeres, otherwise use empty string.
+   "_noCentromeres"
+#   ""
+
+outpath: ##Folder! Don't forget the trailing /
+   calls/bed/
