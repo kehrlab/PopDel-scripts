@@ -1,0 +1,3 @@
+grep -v "^##" calls/popdel/polaris150.rnd.popdel.500-10000.NoCentromeres.vcf | cut -f10- | grep -v "\./\." | sed -e 's;\([0-1]/[0-1]\)[[:graph:]]*;\1;g' -e 's;0/0;0;g' -e 's;0/1;1;g' -e 's;1/1;2;g' > pca/popdel.calls
+#grep -v "^##" calls/delly/polaris150.delly.500-10000.NoCentromeres.vcf | cut -f10- | grep -v "\./\." | sed -e 's;\([0-1]/[0-1]\)[[:graph:]]*;\1;g' -e 's;0/0;0;g' -e 's;0/1;1;g' -e 's;1/1;2;g' -e 's;-N1-DNA1-WGS1;;g'> pca/delly.calls
+#grep -v "^##" calls/lumpy/polaris150.lumpy.500-10000.NoCentromeres.vcf | cut -f10- | grep -v "\./\." | sed -e 's;\([0-1]/[0-1]\)[[:graph:]]*;\1;g' -e 's;0/0;0;g' -e 's;0/1;1;g' -e 's;1/1;2;g' -e 's;-N1-DNA1-WGS1;;g'> pca/lumpy.calls

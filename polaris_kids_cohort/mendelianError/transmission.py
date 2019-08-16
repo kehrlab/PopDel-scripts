@@ -1,18 +1,19 @@
 #!/usr/bin/python
 
+import sys
 from sys import argv
 
 if len(argv) != 4:
-    print("Usage: " + argv[0] + " <Min GT likelihood> <PED file> <VCF file>")
+    print("Usage: " + argv[0] + "<PED file> <VCF file> <popdel|delly|lumpy>")
     exit(1)
 
-minPL = int(argv[1])
-pedfilename = argv[2]
-vcffilename = argv[3]
+pedfilename = argv[1]
+vcffilename = argv[2]
+tool = argv[3]
 
 # ------------------------------------------------------------------------------
 
-def getGenotype(field, minPL):
+def getGenotype(field, tool):
     fields = field.split(':')
 
     gt  = -1
@@ -23,36 +24,91 @@ def getGenotype(field, minPL):
     elif fields[0] == '1/1':
         gt = 2
 
-    pls = [int(x) for x in fields[1].split(',')]
-    pls.sort()
+    gq = -1
+    if tool == "popdel":
+        pls = [int(x) for x in fields[1].split(',')]
+        pls.sort()
+        gq = pls[1]
+    elif tool == "lumpy":
+        if gt != -1:
+            gq = int(fields[1])
+    elif tool == "delly":
+        gq = min(int(fields[2]), 255)
+    else:
+        print("Unknown tool: " + tool)
+        exit(1)
 
-    if pls[1] < minPL:
-        return gt, -1
-
-    return gt, gt
+    return gt, gq
 
 def isGenotyped(gt1, gt2, gt3):
-    if gt1 == -1 or gt2 == -1 or gt3 == -1:
+    if gt1[0] == -1 or gt2[0] == -1 or gt3[0] == -1:
         return False
     return True
 
-def isConsistent(p1, p2, c):
-    if c == 0 and (p1 == 2 or p2 == 2):
-        return False
-    if c == 2 and (p1 == 0 or p2 == 0):
-        return False
-    if c == 1 and p1 == 0 and p2 == 0:
-        return False
-    if c == 1 and p1 == 2 and p2 == 2:
+def isHighQ(gt1, gt2, gt3, minQ):
+    if gt1[1] < minQ or gt2[1] < minQ or gt3[1] < minQ:
         return False
     return True
 
-def isInformative(p1, p2, c):
-    if p1 + p2 == 1 and c != 2:
-        return True
-    if p1 + p2 == 3 and c != 0:
-        return True
-    return False
+def addToColumn(allCounts, minQ, column):
+    for i in range(0, minQ+1):
+        allCounts[i][column] += 1
+
+def addToMatrix(allCounts, p1, p2, c, minQ):
+    if p1 == 0 and p2 == 0 and c == 0:
+        addToColumn(allCounts, minQ, 0)
+    elif p1 == 0 and p2 == 0 and c == 1:
+        addToColumn(allCounts, minQ, 1)
+    elif p1 == 0 and p2 == 0 and c == 2:
+        addToColumn(allCounts, minQ, 2)
+    elif p1 == 0 and p2 == 1 and c == 0:
+        addToColumn(allCounts, minQ, 3)
+    elif p1 == 0 and p2 == 1 and c == 1:
+        addToColumn(allCounts, minQ, 4)
+    elif p1 == 0 and p2 == 1 and c == 2:
+        addToColumn(allCounts, minQ, 5)
+    elif p1 == 0 and p2 == 2 and c == 0:
+        addToColumn(allCounts, minQ, 6)
+    elif p1 == 0 and p2 == 2 and c == 1:
+        addToColumn(allCounts, minQ, 7)
+    elif p1 == 0 and p2 == 2 and c == 2:
+        addToColumn(allCounts, minQ, 8)
+    elif p1 == 1 and p2 == 0 and c == 0:
+        addToColumn(allCounts, minQ, 3)
+    elif p1 == 1 and p2 == 0 and c == 1:
+        addToColumn(allCounts, minQ, 4)
+    elif p1 == 1 and p2 == 0 and c == 2:
+        addToColumn(allCounts, minQ, 5)
+    elif p1 == 1 and p2 == 1 and c == 0:
+        addToColumn(allCounts, minQ, 9)
+    elif p1 == 1 and p2 == 1 and c == 1:
+        addToColumn(allCounts, minQ, 10)
+    elif p1 == 1 and p2 == 1 and c == 2:
+        addToColumn(allCounts, minQ, 11)
+    elif p1 == 1 and p2 == 2 and c == 0:
+        addToColumn(allCounts, minQ, 12)
+    elif p1 == 1 and p2 == 2 and c == 1:
+        addToColumn(allCounts, minQ, 13)
+    elif p1 == 1 and p2 == 2 and c == 2:
+        addToColumn(allCounts, minQ, 14)
+    elif p1 == 2 and p2 == 0 and c == 0:
+        addToColumn(allCounts, minQ, 6)
+    elif p1 == 2 and p2 == 0 and c == 1:
+        addToColumn(allCounts, minQ, 7)
+    elif p1 == 2 and p2 == 0 and c == 2:
+        addToColumn(allCounts, minQ, 8)
+    elif p1 == 2 and p2 == 1 and c == 0:
+        addToColumn(allCounts, minQ, 12)
+    elif p1 == 2 and p2 == 1 and c == 1:
+        addToColumn(allCounts, minQ, 13)
+    elif p1 == 2 and p2 == 1 and c == 2:
+        addToColumn(allCounts, minQ, 14)
+    elif p1 == 2 and p2 == 2 and c == 0:
+        addToColumn(allCounts, minQ, 15)
+    elif p1 == 2 and p2 == 2 and c == 1:
+        addToColumn(allCounts, minQ, 16)
+    elif p1 == 2 and p2 == 2 and c == 2:
+        addToColumn(allCounts, minQ, 17)
 
 # ------------------------------------------------------------------------------
 
@@ -69,73 +125,72 @@ with open(pedfilename, 'r') as pedfile:
 
 header = []
 genotypes = {}
+allCounts = [[0 for i in range(18) ] for j in range(256)]
+singleCounts = [[0 for i in range(18) ] for j in range(256)]
+
 with open(vcffilename, 'r') as vcffile:
     for line in vcffile:
 
+        # Skip VCF header
         if line[0] == '#' and line[1] == '#':
             continue
 
         line = line.split()
 
+        # Get sample names
         if line[0][0] == '#':
             header = line
             header[0] = header[0][1:]
             continue
 
-        if line[0] == 'chrX':
+        # Only consider variants on autosomes
+        if line[0] not in ['chr' + str(x) for x in range(1,23)]:
             continue
 
-        af = float(line[7].split(";")[3][3:])
-
+        # Read genotypes of the variant
         allele_count = 0
         for i in range(9, len(header)):
-            alleles, gt = getGenotype(line[i], minPL)
-            genotypes[header[i]] = gt
-            if alleles != -1:
-                allele_count += alleles
+            gt, gq = getGenotype(line[i], tool)
+            genotypes[header[i]] = (gt, gq)
 
-        tr_avg = "NA"
-        tr_std = "NA"
-        num_informative_trios = 0
-        num_consistent_trios = 0
-        num_gt_trios = 0
+        p1, p2, c, gq = [None]*4
+        singleTrio = True
 
-        trs = []
         for trio in trios:
+
             parent1 = genotypes[trio[0]]
             parent2 = genotypes[trio[1]]
             child = genotypes[trio[2]]
 
             if not isGenotyped(parent1, parent2, child):
                 continue
-            num_gt_trios += 1
 
-            #if allele_count == 1 and child == 1:
-            #    print(line[0] + ":" + line[1] + " is a candidate de novo in trio " + trio[0] + "," + trio[1] + "," + trio[2] + ".")
+            minQ = min(min(parent1[1], parent2[1]), child[1])
+            addToMatrix(allCounts, parent1[0], parent2[0], child[0], minQ)
 
-            if not isConsistent(parent1, parent2, child):
-                continue
-            num_consistent_trios += 1
+            # Check if this is the only trio that carries this variant
+            if (parent1[0] + parent2[0] + child[0]) != 0:
+                if p1 != None:
+                    singleTrio = False
+                else:
+                    p1 = parent1[0]
+                    p2 = parent2[0]
+                    c = child[0]
+                    gq = minQ
 
-            if not isInformative(parent1, parent2, child):
-                continue
-            num_informative_trios += 1
+        if singleTrio and p1 != None:
+            addToMatrix(singleCounts, p1, p2, c, gq)
 
-            gtSum = parent1 + parent2 + child
-            if gtSum == 2 or gtSum == 5:
-                trs += [1.0]
-            elif gtSum == 1 or gtSum ==4:
-                trs += [0.0]
-            else:
-                print("Genotypes are not consistent or " + line[0] + ":" + line[1] + " in trio " + trio[0] + "," + trio[1] + "," + trio[2] + ".")
-                exit(1)
 
-        if len(trs) != num_informative_trios:
-            print("Inconsistent number of trios for " + line[0] + ":" + line[1])
-            exit(1)
+#OUPUT
+print('\t'.join(['AnyTrio', '0-0-0', '0-0-1', '0-0-2', '0-1-0', '0-1-1', '0-1-2', '0-2-0', '0-2-1', '0-2-2', '1-1-0', '1-1-1', '1-1-2', '1-2-0', '1-2-1', '1-2-2', '2-2-0', '2-2-1', '2-2-2']))
+minQ = 0
+for row in allCounts:
+    print('\t'.join(str (x) for x in [minQ] + row))
+    minQ += 1
 
-        if num_informative_trios > 0:
-            tr_avg = sum(trs) / len(trs)
-            tr_std = (sum((x - tr_avg)**2 for x in trs) / len(trs))**0.5
-
-        print('\t'.join([str(x) for x in [line[0], line[1], tr_avg, tr_std, num_informative_trios, num_consistent_trios, num_gt_trios, str(af)]]))
+print('\t'.join(['OneTrio', '0-0-0', '0-0-1', '0-0-2', '0-1-0', '0-1-1', '0-1-2', '0-2-0', '0-2-1', '0-2-2', '1-1-0', '1-1-1', '1-1-2', '1-2-0', '1-2-1', '1-2-2', '2-2-0', '2-2-1', '2-2-2']))
+minQ = 0
+for row in singleCounts:
+    print('\t'.join(str (x) for x in [minQ] + row))
+    minQ += 1

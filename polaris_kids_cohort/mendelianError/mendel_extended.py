@@ -63,8 +63,21 @@ gtMatrix = []
 sampleMap = readPredictFile(gtMatrix, predictFile, minQ, tool)
 trios = loadPedFile(pedFile)
 
-##Counts of error types##
+## Counts
 correct = 0
+## Consistent
+ReReRe = 0      ## 0/0 + 0/0 -> 0/0
+ReHeRe = 0      ## 0/0 + 0/1 -> 0/0
+HeHeRe = 0      ## 0/1 + 0/1 -> 0/0
+ReHeHe = 0      ## 0/0 + 0/1 -> 0/1
+ReHoHe = 0      ## 0/0 + 1/1 -> 0/1
+HeHeHe = 0      ## 0/1 + 0/1 -> 0/1
+HeHoHe = 0      ## 0/1 + 1/1 -> 0/1
+HeHeHo = 0      ## 0/1 + 0/1 -> 1/1
+HeHoHo = 0      ## 0/1 + 1/1 -> 1/1
+HoHoHo = 0      ## 1/1 + 1/1 -> 1/1
+## Inconsistent
+incorrect = 0
 ReReHe = 0    ## 0/0 + 0/0 -> 0/1
 ReReHo = 0    ## 0/0 + 0/0 -> 1/1
 ReHeHo = 0    ## 0/0 + 0/1 -> 1/1
@@ -101,64 +114,131 @@ for var in gtMatrix:                        ## for each variant...
             if p2 == 0:
                 if f1 == 0:
                     correct += 1
+                    ReReRe += 1
                 elif f1 == 1:
+                    incorrect += 1
                     ReReHe += 1
                 elif f1 == 2:
+                    incorrect += 1
                     ReReHo += 1
             elif p2 == 1:
-                if f1 == 0 or f1 == 1:
+                if f1 == 0:
                      correct += 1
+                     ReHeRe += 1
+                elif f1 == 1:
+                     correct += 1
+                     ReHeHe += 1
                 elif f1 == 2:
+                    incorrect += 1
                     ReHeHo += 1
             elif p2 == 2:
                 if f1 == 0:
+                    incorrect += 1
                     ReHoRe += 1
                 elif f1 == 1:
                     correct += 1
+                    ReHoHe += 1
                 elif f1 == 2:
+                    incorrect += 1
                     ReHoHo += 1
         elif p1 == 1:
             if p2 == 0:
-                if f1 == 0 or f1 == 1:
+                if f1 == 0:
                     correct += 1
+                    ReHeRe += 1
+                elif f1 == 1:
+                    correct += 1
+                    ReHeHe += 1
                 elif f1 == 2:
+                    incorrect += 1
                     ReHeHo +=1
-            elif p2 == 1 and f1 != -1:
-                correct += 1
+            elif p2 == 1:
+                if f1 == 0:
+                    correct += 1
+                    HeHeRe += 1
+                elif f1 == 1:
+                    correct += 1
+                    HeHeHe += 1
+                elif f1 == 2:
+                    correct += 1
+                    HeHeHo += 1
             elif p2 == 2:
                 if f1 == 0:
+                    incorrect += 1
                     HeHoRe += 1
-                elif f1 == 1 or f1 == 2:
+                elif f1 == 1:
                     correct += 1
+                    HeHoHe += 1
+                elif f1 == 2:
+                    correct += 1
+                    HeHoHo += 1
         elif p1 == 2:
             if p2 == 0:
                 if f1 == 0:
+                    incorrect += 1
                     ReHoRe += 1
                 elif f1 == 1:
                     correct += 1
+                    ReHoHe += 1
                 elif f1 == 2:
+                    incorrect += 1
                     ReHoHo += 1
             elif p2 == 1:
                 if f1 == 0:
+                    incorrect += 1
                     HeHoRe += 1
-                elif f1 == 1 or f1 == 2:
+                elif f1 == 1:
                     correct += 1
+                    HeHoHe += 1
+                elif f1 == 2:
+                    correct += 1
+                    HeHoHo += 1
             elif p2 == 2:
                 if f1 == 0:
+                    incorrect += 1
                     HoHoRe += 1
                 elif f1 == 1:
+                    incorrect += 1
                     HoHoHe += 1
                 elif f1 == 2:
                     correct += 1
+                    HoHoHo += 1
 
 ##print the results
-tot = float(correct + ReReHe + ReReHo + ReHeHo + ReHoRe + ReHoHo + HeHoRe + HoHoRe + HoHoHe)
-err = float(tot - correct)
-print 'Total     : ' + str(int(tot))
+tot = float(correct + incorrect)
+#print 'Total:\t' + str(int(tot))
 if tot == 0:
-    print ('Consistent: ' + str(correct))
-    print ('Errors    : ' + str(int(err)))
+    print ('Consistent:\t0')
+    print ('Errors    :\t0')
 else:
-    print 'Consistent: ' + str(correct) + '\t(' + "%.4f" % (correct / tot * 100) + '%)'
-    print 'Errors    : ' + str(int(err))+ '\t(' + "%.4f" % (err     / tot * 100) + '%)'
+    print 'Consistent:\t' + str(correct) + '\t(' + "%.4f" % (correct / tot * 100) + '%)'
+    print 'Consistent_w/o_all_Ref:\t' + str(correct - ReReRe) + '\t(' + "%.4f" % ((correct - ReReRe) / (tot - ReReRe) * 100) + '%)'
+    print 'Re+Re->Re:\t' + str(ReReRe)  + '\t(' + "%.4f" % (ReReRe  / tot * 100) + '%)'
+    print 'Re+He->Re:\t' + str(ReHeRe)  + '\t(' + "%.4f" % (ReHeRe  / tot * 100) + '%)'
+    print 'He+He->Re:\t' + str(HeHeRe)  + '\t(' + "%.4f" % (HeHeRe  / tot * 100) + '%)'
+    print 'Re+He->He:\t' + str(ReHeHe)  + '\t(' + "%.4f" % (ReHeHe  / tot * 100) + '%)'
+    print 'Re+Ho->He:\t' + str(ReHoHe)  + '\t(' + "%.4f" % (ReHoHe  / tot * 100) + '%)'
+    print 'He+He->He:\t' + str(HeHeHe)  + '\t(' + "%.4f" % (HeHeHe  / tot * 100) + '%)'
+    print 'He+He->Ho:\t' + str(HeHeHo)  + '\t(' + "%.4f" % (HeHeHo  / tot * 100) + '%)'
+    print 'He+Ho->He:\t' + str(HeHoHe)  + '\t(' + "%.4f" % (HeHoHe  / tot * 100) + '%)'
+    print 'He+Ho->Ho:\t' + str(HeHoHo)  + '\t(' + "%.4f" % (HeHoHo  / tot * 100) + '%)'
+    print 'Ho+Ho->Ho:\t' + str(HoHoHo)  + '\t(' + "%.4f" % (HoHoHo  / tot * 100) + '%)'
 
+    print 'Errors:\t' + str(int(incorrect))+ '\t(' + "%.4f" % (incorrect / tot * 100) + '%)'
+    print 'Re+Re->He:\t' + str(ReReHe)  + '\t(' + "%.4f" % (ReReHe  / tot * 100) + '%)'
+    print 'Re+Re->Ho:\t' + str(ReReHo)  + '\t(' + "%.4f" % (ReReHo  / tot * 100) + '%)'
+    print 'Re+He->Ho:\t' + str(ReHeHo)  + '\t(' + "%.4f" % (ReHeHo  / tot * 100) + '%)'
+    print 'Re+Ho->Re:\t' + str(ReHoRe)  + '\t(' + "%.4f" % (ReHoRe  / tot * 100) + '%)'
+    print 'Re+Ho->Ho:\t' + str(ReHoHo)  + '\t(' + "%.4f" % (ReHoHo  / tot * 100) + '%)'
+    print 'He+Ho->Re:\t' + str(HeHoRe)  + '\t(' + "%.4f" % (HeHoRe  / tot * 100) + '%)'
+    print 'Ho+Ho->Re:\t' + str(HoHoRe)  + '\t(' + "%.4f" % (HoHoRe  / tot * 100) + '%)'
+    print 'Ho+Ho->He:\t' + str(HoHoHe)  + '\t(' + "%.4f" % (HoHoHe  / tot * 100) + '%)'
+
+
+
+
+##Meaning of error abbreviations:
+## Re - Reference (0/0)
+## He - Heterozygous (0/1) or (1/0)
+## Ho - Homozygous variant (1/1)
+## The first two genotypes belong to the parents, the third one to the offspring.

@@ -1,4 +1,3 @@
-
 # PopDel-scripts
 Collection of scripts used for the paper *PopDel calls deletions jointly in tens of thousands of genomes*.
 
@@ -41,8 +40,11 @@ Note on random seeds: The random seed used for the simulation were 19 and 20 (fo
 [*Simulation/truth/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/truth)
 Contains an archive of all simulated variants for each batch size used for the evaluation. The files are the results of the deletion data simulation with above mentioned random seeds.
 
- [*Simulation/evaluation/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/evaluation)
-- [eval_bed.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/runPopDel.sh): Evaluates the TP/FP/FN of all tools. Note that the range of the evaluation loop might have to be adjusted to the batch size the respective tools actually processed successfully.
+ [*Simulation/plots/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/plots)
+- [eval_bed.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/plots/eval_bed.sh): Evaluates the TP/FP/FN of all tools. Note that the range of the evaluation loop might have to be adjusted to match the batch sizes that the respective tools actually processed successfully.
+- [compare_results.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/plots/compare_results.py): Script for alternative evaluation, based on fixed positional and size-estimate margins. can also consider genotypes of individual samples.
+- [eval.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/plots/eval.sh): Wrapper for [compare_results.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/plots/compare_results.py)
+- simulation_plots.R: Script for generating all plots of the simulated data.
 
 ## Call Set comparison of Different Variant Callers on NA12878
 
@@ -64,10 +66,15 @@ Contains an archive of all simulated variants for each batch size used for the e
 - [pacbio/remapped_NA12878_pacbio_deduplicated_deletions.sort.all.bed](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/reference/pacbio/remapped_NA12878_pacbio_deduplicated_deletions.sort.all.bed):
 - [personalis/remapped_NA12878_personalis_deduplicated_deletions.sort.all.bed](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/reference/personalis/remapped_NA12878_personalis_deduplicated_deletions.sort.all.bed):
 
-[*NA12878/bedtools/*](https://github.com/kehrlab/PopDel-scripts/tree/master/NA12878/bedtools)
-- [eval_workflow.svg](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/bedtools/eval_workflow.svg): Overview of the workflow for creating the necessary overlaps for the final venn diagram
-- [config.yaml](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/bedtools/config.yaml): Configuration of the evaluation,
-- [Snakefile.intersect](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/bedtools/Snakefile.intersect): Snakefile for use with Snakemake. Manages the BED-conversion and overlap calculations via bedtools intersect.
+[*NA12878/plots*](https://github.com/kehrlab/PopDel-scripts/tree/master/NA12878/plots)
+- [VennDiagNA12878.R](https://github.com/kehrlab/PopDel-scripts/tree/master/NA12878/plots/VennDiagNA12878.R): Creates Venn diagrams for the call sets of PopDel, Delly and Lumpy for NA12878. Works on the output of [bedtools/Snakefile.intersect](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/plots/bedtools/Snakefile.intersect)
+
+[*NA12878/plots/bedtools/*](https://github.com/kehrlab/PopDel-scripts/tree/master/NA12878/plots/bedtools)
+- [workflow.png](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/plots/bedtools/workflow.png): Overview of the workflow for creating the necessary overlaps for the final venn diagram.
+- [workflow_generous.png](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/plots/bedtools/workflow_generous.png): Overview of the generous workflow for creating the necessary overlaps for the venn diagram.
+- [config.yaml](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/plots/bedtools/config.yaml): Configuration of the evaluation.
+- [Snakefile.intersect](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/plots/bedtools/Snakefile.intersect): Snakefile for use with Snakemake. Manages the BED-conversion and overlap calculations via bedtools intersect.
+- [Snakefile.intersect_generous](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/plots/bedtools/Snakefile.intersect_generous): Snakefile for use with Snakemake. Manages the BED-conversion and generous overlap calculations via bedtools intersect.
 
 ## Polaris HiSeqX Diversity Cohort
 
@@ -92,10 +99,11 @@ Contains an archive of all simulated variants for each batch size used for the e
 - [150.rnd.profiles](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_diversity_cohort/popdelCall/150.rnd.profiles): Shuffled list of paths to the profiles created by PopDel profile.
 - [Snakefile_polaris_popdel](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_diversity_cohort/popdelCall/Snakefile_polaris_popdel): Snakefile for use with Snakemake. Applies PopDel call on each chromosome of all samples jointly.
 
-[*polaris_diversity_cohort/bedtools/*](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_diversity_cohort/bedtools)
-- [dag.svg](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_diversity_cohort/bedtools/dag.svg): Overview of the evaluation workflow.
-- [config.yaml](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_diversity_cohort/bedtools/config.yaml): Configuration for corresponding Snakefile.
-- [Snakefile.intersect](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_diversity_cohort/bedtools/Snakefile.intersect): Manages the BED-conversion and the overlap calculations via bedtools intersect.
+[*polaris_diversity_cohort/plots/*](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_diversity_cohort/plots)
+- [extract_calls.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_diversity_cohort/plots/extract_calls.sh): Commands for transforming the calls of the tools to the allele-count matrix required by pca_boxplot_varCount.R for the PCA.
+- [extract_popdel_per_sample_variants_GT27.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_diversity_cohort/plots/extract_popdel_per_sample_variants_GT27.sh): Counts PopDel's deletions per sample.
+- [ancestry.csv](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_diversity_cohort/plots/ancestry.csv): Lists the ancestry of each sample.
+- [pca_boxplot_varCount.R](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_diversity_cohort/plots/pca_boxplot_varCount.R): Script for creating the PCA-plots for all tools, the box-plot for PopDel, and assessing the significance of the variant counts for PopDel.
 
 ## Polaris Kids Cohort
 
@@ -114,20 +122,15 @@ Contains an archive of all simulated variants for each batch size used for the e
 [*polaris_kids_cohort/popdel/*](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_kids_cohort/popdel)
 - [dag.svg](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/popdel/dag.svg): Overview of PopDel's workflow.
 - [family_kids.profiles](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/popdel/family_kids.profiles): Shuffled list of paths to profiles created by PopDel profile.
-- [enter link description here](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/popdel/Snakefile_polaris_kids)Snakefile_polaris_kids: Snakefile for use with Snakemake. Manages PopDel's workflow.
+- [Snakefile_polaris_kids_popdel](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/popdel/Snakefile_polaris_kids_popdel)Snakefile_polaris_kids: Snakefile for use with Snakemake. Manages PopDel's workflow.
 
 [*polaris_kids_cohort/mendelianError/*](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_kids_cohort/mendelianError)
+- [deduplicate.py](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/mendelianError/deduplicate.py): Script for removing duplicates from a VCF file.
 - [kids.ped](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/mendelianError/kids.ped): Contains the pedigree information of the kids cohort. One trio <Parent1, Parent2, Child> per line.
 - [mendel.py](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/mendelianError/mendel.py): Script for calculating the Mendelian error rates of the call sets.
-- [transmission.py](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/mendelianError/transmission.py): Script for calculating the transmission rates of PopDel's calls.
+- [mendelLoop.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/mendelianError/mendelLoop.sh): Script for applying mendel.py with varying genotype quality thresholds.
+- [mendel_extended.py](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/mendelianError/mendel_extended.py): Same as mendel.py, but with additional information on error-types.
+- [transmission.py](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/mendelianError/transmission.py): Script for calculating the transmission rates of the calls for varying genotype quality thresholds.
 
-## Plots
-
-- [simulation_plots.r](https://github.com/kehrlab/PopDel-scripts/blob/master/plots_and_calculations/simulation_plots.R): Script for creating the plots for running times, memory consumption, precision, recall and buffering behavior for the simulated chromosome 21 data.
-- [VennDiagNa12878.r](https://github.com/kehrlab/PopDel-scripts/blob/master/plots_and_calculations/VennDiagNA12878.r): Creates Venn diagrams for the call sets of PopDel, Delly and Lumpy for NA12878
-
-[*plots_and_calculations/pca_and_boxplot/*](https://github.com/kehrlab/PopDel-scripts/tree/master/plots_and_calculations/pca_and_boxplot)
-
-- [ancestry.csv](https://github.com/kehrlab/PopDel-scripts/blob/master/plots_and_calculations/pca_and_boxplot/ancestry.csv): Contians the ancestry information of all samples in the Polaris HiSeqX Diversity Cohort.
-- [extract_calls.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/plots_and_calculations/pca_and_boxplot/extract_calls.sh): Script containing the commands for converting PopDel's (or Delly's) output into the variant/sample allele-count matrix required for the PCA.
-- [pca.r](https://github.com/kehrlab/PopDel-scripts/blob/master/plots_and_calculations/pca_and_boxplot/pca.r): R-script for pre-processing of the matrix created by extract_calls.sh and performing the PCA. Also creates the boxPlots of variant counts per ethnic group.
+[*polaris_kids_cohort/plots/*](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_kids_cohort/plots)
+ - [mendelian_plots.R](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/plots/mendelian_plots.R): Script for plotting the Mendelian error rates from the output of [mendelLoop.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/mendelianError/mendelLoop.sh) for all tools. 

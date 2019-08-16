@@ -8,11 +8,11 @@ TRUTH_full=config["fullTruthFile"]
 OVERLAP=config["overlap"]
 
 POPDELBED_out=expand("{out}popdel.deletions.{L}-{R}.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"])
-POPDELBED_in=expand("{out}popdel.deletions.{L}-{R}.generous.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
+POPDELBED_in=expand("{out}popdel.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
 DELLYBED_out=expand("{out}delly.deletions.{L}-{R}.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"])
-DELLYBED_in=expand("{out}delly.deletions.{L}-{R}.generous.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
+DELLYBED_in=expand("{out}delly.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
 LUMPYBED_out=expand("{out}lumpy.deletions.{L}-{R}.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"])
-LUMPYBED_in=expand("{out}lumpy.deletions.{L}-{R}.generous.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
+LUMPYBED_in=expand("{out}lumpy.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
 
 POPDELTP=expand("{out}intersects/popdel/{t}/tp.popdel.{L}-{R}.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"])
 LUMPYTP=expand("{out}intersects/lumpy/{t}/tp.lumpy.{L}-{R}.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"])
@@ -27,7 +27,7 @@ INTERTPDELLYLUMPY=expand("{out}intersects/intersect.tp.delly.lumpy.bed", out=con
 INTERPOPDELDELLYLUMPY=expand("{out}intersects/intersect.popdel.delly.lumpy.bed", out=config["outpath"])
 INTERTPPOPDELDELLYLUMPY=expand("{out}intersects/intersect.tp.popdel.delly.lumpy.bed", out=config["outpath"])
 
-COUNT=expand("{out}counts.{t}.{L}-{R}{c}.{o}.tsv", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"], c=config["filterCentromeres"], o=config["overlap"])
+COUNT=expand("{out}counts.{t}.{L}-{R}{c}.{o}.rigorous.tsv", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"], c=config["filterCentromeres"], o=config["overlap"])
 
 ##### DO NOT TOUCH THIS! ####
 
@@ -94,42 +94,9 @@ rule get_fp:
    shell:
       "bedtools intersect -v -r -f {params} -a {input.calls} -b {input.truth} > {output}"
 
-rule get_full_fp:
-   input:
-      calls=expand("{out}{{tool}}.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"]),
-      truth=TRUTH_full
-   output:
-      temp(expand("{out}intersects/{{tool}}/{t}/fp.{{tool}}.all.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"]))
-   params:
-      OVERLAP
-   shell:
-      "bedtools intersect -v -r -f {params} -a {input.calls} -b {input.truth} > {output}"
-
-rule get_border_fp:
-   input:
-      a=expand("{out}intersects/{{tool}}/{t}/fp.{{tool}}.{L}-{R}.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"]),
-      b=expand("{out}intersects/{{tool}}/{t}/fp.{{tool}}.all.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"])
-   output:
-      temp(expand("{out}intersects/{{tool}}/{t}/border.fp.{{tool}}.{L}-{R}.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"]))
-   params:
-      OVERLAP
-   shell:
-      "bedtools intersect -v -r -f {params} -a {input.a} -b {input.b} > {output}"
-
-rule remove_border_fp:
-   input:
-      calls=expand("{out}{{tool}}.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"]),
-      fp=expand("{out}intersects/{{tool}}/{t}/border.fp.{{tool}}.{L}-{R}.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"])
-   output:
-      temp(expand("{out}{{tool}}.deletions.{L}-{R}.generous.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"]))
-   params:
-      OVERLAP
-   shell:
-      "bedtools intersect -v -r -f {params} -a {input.calls} -b {input.fp} > {output}"
-
 rule get_tp:
    input:
-      calls=expand("{out}{{tool}}.deletions.{L}-{R}.generous.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"]),
+      calls=expand("{out}{{tool}}.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"]),
       truth=TRUTH_in
    output:
       temp(expand("{out}intersects/{{tool}}/{t}/tp.{{tool}}.{L}-{R}.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"]))
@@ -141,7 +108,7 @@ rule get_tp:
 rule overlapPopDelX:
    input:
       first=POPDELBED_in,
-      second=expand("{out}{{tool, (delly|lumpy)}}.deletions.{L}-{R}.generous.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"]),
+      second=expand("{out}{{tool, (delly|lumpy)}}.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"]),
    output:
       temp(expand("{out}intersects/intersect.popdel.{{tool, (delly|lumpy)}}.bed", out=config["outpath"]))
    params:
@@ -163,7 +130,7 @@ rule overlapDellyLumpy:
 rule overlapTpPopdelX:
    input:
       first=POPDELTP,
-      second=expand("{out}{{tool, (delly|lumpy)}}.deletions.{L}-{R}.generous.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"])
+      second=expand("{out}{{tool, (delly|lumpy)}}.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
    output:
       temp(expand("{out}intersects/intersect.tp.popdel.{{tool, (delly|lumpy)}}.bed", out=config["outpath"]))
    params:

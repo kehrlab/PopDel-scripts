@@ -43,6 +43,18 @@ lumpyCountsPath  <- "TP-FP-FN/lumpy/lumpy.bed.counts"
 mantaCountsPath  <- "TP-FP-FN/manta/manta.bed.counts"
 gridssCountsPath <- "TP-FP-FN/gridss/gridss.bed.counts"
 
+popdelGTCountsPath <- "TP-FP-FN/popdel/popdel.Binom4.GTcounts" ##Alternative with genotypes. created by eval.sh
+dellyGTCountsPath  <- "TP-FP-FN/delly/delly.GTcounts"
+lumpyGTCountsPath  <- "TP-FP-FN/lumpy/lumpy.GTcounts"
+mantaGTCountsPath  <- "TP-FP-FN/manta/manta.GTcounts"
+
+#popdelCountsPath <- "TP-FP-FN/popdel/popdel.counts" ##Alternative w/o genotypes. Created by eval.sh
+#dellyCountsPath  <- "TP-FP-FN/delly/delly.counts"
+#lumpyCountsPath  <- "TP-FP-FN/lumpy/lumpy.counts"
+#mantaCountsPath  <- "TP-FP-FN/manta/manta.counts"
+#gridssCountsPath <- "TP-FP-FN/gridss/gridss.counts"
+
+
 ##### Loading, pre-processing and formating #######
 
 ##Runtime and memory for 10-100 simulated samlples##
@@ -158,6 +170,7 @@ lumpySum <- cbind(lumpySum, pmax(tmp, lumpy$mem, svtyper$mem))
 ############ Plots #############
 
 
+pdf("/home/sroskosch/Documents/PopDel/PopDelPaper/figures/figure1.pdf", width=8, height=5)
 par(mfrow=c(2,2), mar=c(3.5,4.2,0.5,1))
 
 ##CPU-Time
@@ -285,7 +298,7 @@ points(x=c(mantaCounts$SampleNum[nrow(mantaCounts)],
            lumpyCounts$SampleNum[nrow(lumpyCounts)],
            dellyCounts$SampleNum[nrow(dellyCounts)],
            gridssCounts$SampleNum[nrow(gridssCounts)]),
-       y=c(mantaCounts$Prec[nrow(manta)],
+       y=c(mantaCounts$Prec[nrow(mantaCounts)],
            lumpyCounts$Prec[nrow(lumpyCounts)],
            dellyCounts$Prec[nrow(dellyCounts)],
            gridssCounts$Prec[nrow(gridssCounts)]),
@@ -315,12 +328,111 @@ points(x=c(mantaCounts$SampleNum[nrow(mantaCounts)],
            lumpyCounts$SampleNum[nrow(lumpyCounts)],
            dellyCounts$SampleNum[nrow(dellyCounts)],
            gridssCounts$SampleNum[nrow(gridssCounts)]),
-       y=c(mantaCounts$Rec[nrow(manta)],
+       y=c(mantaCounts$Rec[nrow(mantaCounts)],
            lumpyCounts$Rec[nrow(lumpyCounts)],
            dellyCounts$Rec[nrow(dellyCounts)],
            gridssCounts$Rec[nrow(gridssCounts)]),
        col=c(mantacol, lumpycol, dellycol, gridsscol),
        pch = 4, lwd = lwd)
+dev.off()
+
+## With GT consideration
+
+appendGtInfo <- function(df, infile)
+{
+    t <- read.table(infile)
+    df$FP1 <- 0
+    df$FP2 <- 0
+    df$FP3 <- 0
+    df$FN1 <- 0
+    df$FN2 <- 0
+    df$FN3 <- 0
+    df$TP1 <- 0
+    df$TP2 <- 0
+    df$TotalFPGT <- 0
+    df$TotalFNGT <- 0
+    df$TotalTGT <- 0
+    df$TotalFGT <- 0
+    df$precGT <- 0
+    df$recGT <- 0
+    df$F1GT <- 0
+    for (j in seq(1, dim(t)[1]))
+    {
+        n <- as.numeric(t[j,1])
+        i <- which(df$SampleNum==n)
+        df[i,]$FP1 <- as.numeric(t[j,2])
+        df[i,]$FP2 <- as.numeric(t[j,5])
+        df[i,]$FP3 <- as.numeric(t[j,9])
+        df[i,]$FN1 <- as.numeric(t[j,7])
+        df[i,]$FN2 <- as.numeric(t[j,8])
+        df[i,]$FN3 <- as.numeric(t[j,6])
+        df[i,]$TP1 <- as.numeric(t[j,4])
+        df[i,]$TP2 <- as.numeric(t[j,3])
+        df[i,]$TotalFPGT <-  df[i,]$FP1 + df[i,]$FP2 +  df[i,]$FP3
+        df[i,]$TotalFNGT <- df[i,]$FN1 + df[i,]$FN2 + df[i,]$FN3
+        df[i,]$TotalTGT <- df[i,]$TP1 + df[i,]$TP2
+        df[i,]$TotalFGT <- df[i,]$TotalFPGT + df[i,]$TotalFNGT
+        df[i,]$precGT <- df[i,]$TotalTGT / (df[i,]$TotalTGT + df[i,]$TotalFPGT)
+        df[i,]$recGT <- df[i,]$TotalTGT / (df[i,]$TotalTGT + df[i,]$TotalFNGT)
+        df[i,]$F1GT <- 2/(1 / df[i,]$precGT + 1 / df[i,]$recGT)
+    }
+    return(df)
+}
+
+popdelUndercall <- popdelCounts$FN1 + 2*popdelCounts$FN2 + popdelCounts$FN3
+popdelOvercall <- popdelCounts$FP1 + 2*popdelCounts$FP2 + popdelCounts$FP3 
+popdelMisscall <- popdelUndercall + popdelOvercall
+popdelTotal <- 2 * (popdelCounts$TP1 + popdelCounts$TP2 + popdelCounts$FN1 + popdelCounts$FN2 + popdelCounts$FN3 + popdelCounts$FP1 + popdelCounts$FP2)
+
+dellyUndercall <- dellyCounts$FN1 + 2*dellyCounts$FN2 + dellyCounts$FN3
+dellyOvercall <- dellyCounts$FP1 + 2*dellyCounts$FP2 + dellyCounts$FP3 
+dellyMisscall <- dellyUndercall + dellyOvercall
+dellyTotal <- 2 * (dellyCounts$TP1 + dellyCounts$TP2 + dellyCounts$FN1 + dellyCounts$FN2 + dellyCounts$FN3 + dellyCounts$FP1 + dellyCounts$FP2)
+
+lumpyUndercall <- lumpyCounts$FN1 + 2*lumpyCounts$FN2 + lumpyCounts$FN3
+lumpyOvercall <- lumpyCounts$FP1 + 2*lumpyCounts$FP2 + lumpyCounts$FP3 
+lumpyMisscall <- lumpyUndercall + lumpyOvercall
+lumpyTotal <- 2 * (lumpyCounts$TP1 + lumpyCounts$TP2 + lumpyCounts$FN1 + lumpyCounts$FN2 + lumpyCounts$FN3 + lumpyCounts$FP1 + lumpyCounts$FP2)
+
+mantaUndercall <- mantaCounts$FN1 + 2*mantaCounts$FN2 + mantaCounts$FN3
+mantaOvercall <- mantaCounts$FP1 + 2*mantaCounts$FP2 + mantaCounts$FP3 
+mantaMisscall <- mantaUndercall + mantaOvercall
+mantaTotal <- 2 * (mantaCounts$TP1 + mantaCounts$TP2 + mantaCounts$FN1 + mantaCounts$FN2 + mantaCounts$FN3 + mantaCounts$FP1 + mantaCounts$FP2)
+
+plot(y = 1 - (popdelMisscall / popdelTotal), x=popdelCounts$SampleNum, type="l", col=pdcol, ylim=c(0.69, 0.94), lwd=2,
+     cex.axis = 1.5, cex.main = 1.5, cex.lab = 1.5, xlab = "Number of samples", bty="n", log="x", ylab="Correct allele classification ratio")
+lines(y = 1 - (popdelMisscall / popdelTotal), x=popdelCounts$SampleNum, col=pdcol, lwd=2)
+lines(y = 1 - (dellyMisscall / dellyTotal), x=dellyCounts$SampleNum, col=dellycol, lwd=2)
+lines(y = 1 - (lumpyMisscall / lumpyTotal), x=lumpyCounts$SampleNum, col=lumpycol, lwd=2)
+lines(y = 1 - (mantaMisscall / mantaTotal), x=mantaCounts$SampleNum, col=mantacol, lwd=2)
+
+plot(x=popdelCounts$SampleNum, y=1 - (popdelMisscall / popdelTotal), type="l", col=NULL, ylim= c(0.2, 0.95), log="x",
+     xlab = "",
+     ylab = "",
+     yaxt = "n",
+     xaxt = "n",
+     lwd=lwd, cex.axis = cexaxis, cex.lab = cexlab, bty = "n", pch=pdchp)
+axis(side = 1, at = xticks, labels=FALSE, cex.axis = cexaxis)
+axis(side = 1, at = c(1, 10, 100, 1000), cex.axis = cexaxis)
+yticks = seq(0.2, 0.95, 0.05)
+axis(side=2, at=yticks, cex.axis = cexaxis)
+mtext(side=1, line=2.5, "Number of samples", cex=cexlab)
+mtext(side=2, line=2.5, "Ratio of correct alleles", cex=cexlab)
+lines(x=popdelCounts$SampleNum,y=1 - (popdelMisscall / popdelTotal), type="l", col=pdcol, lwd=lwd, pch=pdchp)
+lines(x=dellyCounts$SampleNum, y=1 - (dellyMisscall / dellyTotal), type="l", col=dellycol, lwd=lwd, pch=dellychp)
+lines(x=lumpyCounts$SampleNum, y=1 - (lumpyMisscall / lumpyTotal), type="l", col=lumpycol, lwd=lwd, pch=lumpychp)
+lines(x=mantaCounts$SampleNum, y=1 - (mantaMisscall / mantaTotal), type="l", col=mantacol, lwd=lwd, pch=mantachp)
+points(x=c(mantaCounts$SampleNum[nrow(mantaCounts)],
+           lumpyCounts$SampleNum[nrow(lumpyCounts)],
+           dellyCounts$SampleNum[nrow(dellyCounts)]),
+       y=c(1 - (mantaMisscall / mantaTotal)[nrow(mantaCounts)],
+           1 - (lumpyMisscall / lumpyTotal)[nrow(lumpyCounts)],
+           1 - (dellyMisscall / dellyTotal)[nrow(dellyCounts)]),
+       col=c(mantacol, lumpycol, dellycol),
+       pch = 4, lwd = lwd)
+legend("bottomright" , inset=0.01, legend=c("PopDel", "Delly", "LUMPY", "Manta"),
+       col = c(pdcol, dellycol, lumpycol, mantacol),
+       cex=cexLegend, lwd=lwd, bty="n")
 
 
 ## PopDel plot for varying buffer size
@@ -349,3 +461,4 @@ lines(x = popdelBuffer$mem / 1000, y = (popdelBuffer$usr + popdelBuffer$sys) / f
 defaultIdx = which(popdelBuffer$b == 200000)
 points(x = popdelBuffer$mem[defaultIdx] / 1000 , y = (popdelBuffer$usr[defaultIdx] + popdelBuffer$sys[defaultIdx]) / f,
        col = pdcol, pch = 16)
+

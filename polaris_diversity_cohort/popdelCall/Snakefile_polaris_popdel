@@ -31,7 +31,7 @@ rule merge:
         "calls/popdel/polaris150.rnd.popdel.vcf"
     threads: 1
     shell:
-        "awk 'FNR<=216 && NR>216{{next;}}{{print}}' {input.chr1} {input.chr10} {input.chr11} {input.chr12} {input.chr13} {input.chr14} {input.chr15} {input.chr16} {input.chr17} {input.chr18} {input.chr19} {input.chr2} {input.chr20} {input.chr21} {input.chr22} {input.chr3} {input.chr4} {input.chr5} {input.chr6} {input.chr7} {input.chr8} {input.chr9} {input.chrX} > {output}"
+        "awk 'FNR<=221 && NR>221{{next;}}{{print}}' {input.chr1} {input.chr10} {input.chr11} {input.chr12} {input.chr13} {input.chr14} {input.chr15} {input.chr16} {input.chr17} {input.chr18} {input.chr19} {input.chr2} {input.chr20} {input.chr21} {input.chr22} {input.chr3} {input.chr4} {input.chr5} {input.chr6} {input.chr7} {input.chr8} {input.chr9} {input.chrX} > {output}"
 
 rule chr1:
     input:
