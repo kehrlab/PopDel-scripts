@@ -39,7 +39,7 @@ Note on random seeds: The random seed used for the simulation were 19 and 20 (fo
 - [runPopDel.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/runPopDel.sh)): Runs all the scripts and measures the resource consumption.
 
 [*Simulation/truth/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/truth)
-Contains an archive of all simulated variants for each batch size used for the evaluation. The files are the results of the deletion data simulation with above mentioned random seeds.
+Contains an archive ([truth.tar.gz](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/truth/truth.tar.gz)) of all simulated variants for each batch size used for the evaluation. The files are the results of the deletion data simulation with above mentioned random seeds.
 
  [*Simulation/plots/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/plots)
 - [eval_bed.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/plots/eval_bed.sh): Evaluates the TP/FP/FN of all tools. Note that the range of the evaluation loop might have to be adjusted to match the batch sizes that the respective tools actually processed successfully.
