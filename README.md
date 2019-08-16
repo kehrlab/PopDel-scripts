@@ -36,7 +36,7 @@ Note on random seeds: The random seed used for the simulation were 19 and 20 (fo
 
  [*Simulation/podel/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/popdel)
 - [popdelProfile.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/popdelProfile.sh): Contains the commands for creating a profile of each bam file.
-- runPopDel.sh: Runs all the scripts and measures the resource consumption.
+- [runPopDel.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/runPopDel.sh)): Runs all the scripts and measures the resource consumption.
 
 [*Simulation/truth/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/truth)
 Contains an archive of all simulated variants for each batch size used for the evaluation. The files are the results of the deletion data simulation with above mentioned random seeds.
