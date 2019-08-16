@@ -42,10 +42,10 @@ Note on random seeds: The random seed used for the simulation were 19 and 20 (fo
 Contains an archive ([truth.tar.gz](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/truth/truth.tar.gz)) of all simulated variants for each batch size used for the evaluation. The files are the results of the deletion data simulation with above mentioned random seeds.
 
  [*Simulation/plots/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/plots)
-- [eval_bed.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/plots/eval_bed.sh): Evaluates the TP/FP/FN of all tools. Note that the range of the evaluation loop might have to be adjusted to match the batch sizes that the respective tools actually processed successfully.
-- [compare_results.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/plots/compare_results.py): Script for alternative evaluation, based on fixed positional and size-estimate margins. can also consider genotypes of individual samples.
-- [eval.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/plots/eval.sh): Wrapper for [compare_results.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/plots/compare_results.py)
-- simulation_plots.R: Script for generating all plots of the simulated data.
+- [eval_bed.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/plots/eval_bed.sh): Evaluates the TP/FP/FN of all tools. Note that the range of the evaluation loop might have to be adjusted to match the batch sizes that the respective tools actually processed successfully.
+- [compare_results.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/plots/compare_results.py): Script for alternative evaluation, based on fixed positional and size-estimate margins. can also consider genotypes of individual samples.
+- [eval.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/plots/eval.sh): Wrapper for [compare_results.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/plots/compare_results.py)
+- [simulation_plots.R](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/plots/simulation_plots.R): Script for generating all plots of the simulated data.
 
 ## Call Set comparison of Different Variant Callers on NA12878
 
