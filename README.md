@@ -1,5 +1,5 @@
 # PopDel-scripts
-Collection of scripts used for the paper *PopDel calls deletions jointly in tens of thousands of genomes*.
+Collection of scripts used for the paper *PopDel identifies medium-size deletions jointly in tens of thousands of genomes *.
 
 **Content**
 This repository contains the scripts used for the comparisons and evaluations of the paper *PopDel calls deletions jointly in tens of thousands of genomes*. It does not contain the public data of of the [Polaris HiSeqX Diversity Cohort](https://github.com/Illumina/Polaris/wiki/HiSeqX-Diversity-Cohort), [Polaris Kids Cohort](https://github.com/Illumina/Polaris/wiki/HiSeqX-Kids-Cohort) or the [Illumina Platinum Genome NA12878](https://www.ebi.ac.uk/ena/data/view/ERR194147). They can be obtained from the respective online sources. Running the scripts might require you to adapt the paths in some of them.
@@ -133,4 +133,4 @@ Contains an archive of all simulated variants for each batch size used for the e
 - [transmission.py](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/mendelianError/transmission.py): Script for calculating the transmission rates of the calls for varying genotype quality thresholds.
 
 [*polaris_kids_cohort/plots/*](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_kids_cohort/plots)
- - [mendelian_plots.R](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/plots/mendelian_plots.R): Script for plotting the Mendelian error rates from the output of [mendelLoop.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/mendelianError/mendelLoop.sh) for all tools. 
+ - [mendelian_plots.R](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/plots/mendelian_plots.R): Script for plotting the Mendelian error rates from the output of [mendelLoop.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/mendelianError/mendelLoop.sh) for all tools.
