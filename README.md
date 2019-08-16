@@ -1,5 +1,5 @@
 # PopDel-scripts
-Collection of scripts used for the paper *PopDel identifies medium-size deletions jointly in tens of thousands of genomes *.
+Collection of scripts used for the paper *PopDel identifies medium-size deletions jointly in tens of thousands of genomes*.
 
 **Content**
 This repository contains the scripts used for the comparisons and evaluations of the paper *PopDel calls deletions jointly in tens of thousands of genomes*. It does not contain the public data of of the [Polaris HiSeqX Diversity Cohort](https://github.com/Illumina/Polaris/wiki/HiSeqX-Diversity-Cohort), [Polaris Kids Cohort](https://github.com/Illumina/Polaris/wiki/HiSeqX-Kids-Cohort) or the [Illumina Platinum Genome NA12878](https://www.ebi.ac.uk/ena/data/view/ERR194147). They can be obtained from the respective online sources. Running the scripts might require you to adapt the paths in some of them.
