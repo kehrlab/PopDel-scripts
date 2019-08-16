@@ -104,7 +104,7 @@ Contains an archive ([truth.tar.gz](https://github.com/kehrlab/PopDel-scripts/bl
 - [extract_calls.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_diversity_cohort/plots/extract_calls.sh): Commands for transforming the calls of the tools to the allele-count matrix required by pca_boxplot_varCount.R for the PCA.
 - [extract_popdel_per_sample_variants_GT27.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_diversity_cohort/plots/extract_popdel_per_sample_variants_GT27.sh): Counts PopDel's deletions per sample.
 - [ancestry.csv](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_diversity_cohort/plots/ancestry.csv): Lists the ancestry of each sample.
-- [pca_boxplot_varCount.R](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_diversity_cohort/plots/pca_boxplot_varCount.R): Script for creating the PCA-plots for all tools, the box-plot for PopDel, and assessing the significance of the variant counts for PopDel.
+- [pca_boxplot_varCount.R](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_diversity_cohort/plots/pca_boxplot_varCount.R): Script for creating the PCA-plots for all tools, the box-plot for PopDel.
 
 ## Polaris Kids Cohort
 

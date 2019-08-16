@@ -19,19 +19,6 @@ colnames(groups) <- c("ancestry")
 perSampleVar <- cbind(perSampleVar, groups[rownames(perSampleVar),])
 colnames(perSampleVar) <- c("variants", "ancestry")
 
-##Testing for significant differences in number of variant alleles
-g <- groups[rownames(calls),]
-afr <- calls[which(g=="AFR"),]
-eas <- calls[which(g=="EAS"),]
-eur <- calls[which(g=="EUR"),]
-afr_eur <- matrix(c(sum(afr), sum(afr==0), sum(eur), sum(eur==0)), nrow = 2, dimnames = list(c("var", "ref"), c("AFR", "EUR")))
-afr_eas <- matrix(c(sum(afr), sum(afr==0), sum(eas), sum(eas==0)), nrow = 2, dimnames = list(c("var", "ref"), c("AFR", "EAS")))
-eur_eas <- matrix(c(sum(eur), sum(eur==0), sum(eas), sum(eas==0)), nrow = 2, dimnames = list(c("var", "ref"), c("EUR", "EAS")))
-
-fisher.test(afr_eur, alternative = "greater")
-fisher.test(afr_eas, alternative = "greater")
-fisher.test(eur_eas, alternative = "two.sided")
-
 # Check for duplicate rows/samples
 anyDuplicated(calls) # Returns false, so everything is fine.
 
