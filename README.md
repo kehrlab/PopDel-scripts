@@ -64,8 +64,8 @@ Contains an archive ([truth.tar.gz](https://github.com/kehrlab/PopDel-scripts/bl
 
 [*NA12878/reference*](https://github.com/kehrlab/PopDel-scripts/tree/master/NA12878/reference)
 - [contromeres.bed](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/reference/centromeres.bed)
-- [pacbio/remapped_NA12878_pacbio_deduplicated_deletions.sort.all.bed](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/reference/pacbio/remapped_NA12878_pacbio_deduplicated_deletions.sort.all.bed):
-- [personalis/remapped_NA12878_personalis_deduplicated_deletions.sort.all.bed](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/reference/personalis/remapped_NA12878_personalis_deduplicated_deletions.sort.all.bed):
+- [pacbio/remapped_NA12878_pacbio_deduplicated_deletions.sort.all.bed](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/reference/pacbio/remapped_NA12878_pacbio_deduplicated_deletions.sort.all.bed): Set of high quality reference deletions for NA12878 based on PacBio long reads. Based on variants of [GiaB](ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/NA12878/NA12878_PacBio_MtSinai/).
+- [personalis/remapped_NA12878_personalis_deduplicated_deletions.sort.all.bed](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/reference/personalis/remapped_NA12878_personalis_deduplicated_deletions.sort.all.bed): Set of high quality reference deletions for NA12878 based on Illumina short reads. Based on variants from [GiaB](ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/NA12878/analysis/Illumina_PlatinumGenomes_NA12877_NA12878_09162015/hg38/2.0.1/NA12878/).
 
 [*NA12878/plots*](https://github.com/kehrlab/PopDel-scripts/tree/master/NA12878/plots)
 - [VennDiagNA12878.R](https://github.com/kehrlab/PopDel-scripts/tree/master/NA12878/plots/VennDiagNA12878.R): Creates Venn diagrams for the call sets of PopDel, Delly and Lumpy for NA12878. Works on the output of [bedtools/Snakefile.intersect](https://github.com/kehrlab/PopDel-scripts/blob/master/NA12878/plots/bedtools/Snakefile.intersect)
