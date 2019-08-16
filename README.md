@@ -110,7 +110,7 @@ Contains an archive ([truth.tar.gz](https://github.com/kehrlab/PopDel-scripts/bl
 
 [*polaris_kids_cohort/delly/*](https://github.com/kehrlab/PopDel-scripts/tree/master/polaris_kids_cohort/delly)
 - [dag.svg](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/delly/dag.svg): Overview of Delly's workflow.
-- [enter link description here](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/delly/environment.yaml)environment.yaml: Conda environment for Delly.
+- [environment.yaml](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/delly/environment.yaml): Conda environment for Delly.
 - [config.yaml](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/delly/config.yaml): Contains the configuration for the corresponding Snakefile.
 - [Snakefile_polaris_kids_delly](https://github.com/kehrlab/PopDel-scripts/blob/master/polaris_kids_cohort/delly/Snakefile_polaris_kids_delly): Manages Delly's workflow.
 
