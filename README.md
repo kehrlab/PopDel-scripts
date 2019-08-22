@@ -1,5 +1,8 @@
 # PopDel-scripts
-Collection of scripts used for the paper *PopDel identifies medium-size deletions jointly in tens of thousands of genomes*.
+Collection of scripts used for the paper
+Sebastian Roskosch, Hákon Jónsson, Eythór Björnsson, Doruk Beyter, Hannes P. Eggertsson, Patrick Sulem, Kári Stefánsson, Bjarni V. Halldórsson, Birte Kehr.
+*PopDel identifies medium-size deletions jointly in tens of thousands of genomes*.
+Preprint available at bioRxiv 740225; doi: https://doi.org/10.1101/740225
 
 **Content**
 
@@ -37,7 +40,7 @@ Note on random seeds: The random seed used for the simulation were 19 and 20 (fo
 
  [*Simulation/podel/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/popdel)
 - [popdelProfile.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/popdelProfile.sh): Contains the commands for creating a profile of each bam file.
-- [runPopDel.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/runPopDel.sh)): Runs all the scripts and measures the resource consumption.
+- [runPopDel.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/popdel/runPopDel.sh): Runs all the scripts and measures the resource consumption.
 
 [*Simulation/truth/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/truth)
 Contains an archive ([truth.tar.gz](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/truth/truth.tar.gz)) of all simulated variants for each batch size used for the evaluation. The files are the results of the deletion data simulation with above mentioned random seeds.
