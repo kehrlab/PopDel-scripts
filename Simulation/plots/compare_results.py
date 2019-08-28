@@ -122,15 +122,12 @@ def addTruePositive(counts, sGts, records, ids):
     # Select the matching prediction with the highest likelihood ratio.
     maxLR = 0
     if 'LR' in records[ids[0]].info:
-        which = 0
         for id in ids:
             if records[id].info['LR'] > maxLR:
                 pGts = records[id].gts
                 maxLR = records[id].info['LR']
-                which = id
     else:
         pGts = records[ids[0]].gts
-    rec = records[which]
     for i in range(0, len(sGts)):
         if sGts[i] == '0/0':
             if pGts[i] == '0/1':
