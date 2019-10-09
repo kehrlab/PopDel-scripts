@@ -21,7 +21,7 @@ This repository contains the scripts used for the comparisons and evaluations of
 - [simulate.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/deletion_data_simulation/simulate.sh): Wrapping above scripts and aligning the simulated reads to the GRCh38.
 - [simulation2vcf.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/deletion_data_simulation/simulation2vcf.py): Writing the simulated deletions to VCF-files.
 
-Note on random seeds: The random seed used for the simulation were 19 and 20 (for variant simulation + read-simulation of haplotype 1 and 2)  for the first sample, 20 and 21 for the second sample and so on.
+Note on random seeds: The random seed used for the simulation of reads using 'simulate.sh' was 1 for the first sample, 2 for the the second sample and so on.
 
  [*Simulation/delly/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/delly)
  - [generateDelly.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/delly/generateDelly.sh): generates the scripts for each batch size.
