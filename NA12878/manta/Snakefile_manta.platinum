@@ -1,0 +1,42 @@
+configfile: "scripts/manta/config.yaml"
+
+rule all:
+    input:
+        config["vcf"]
+
+rule manta_config_platinum:
+    input:
+        ref = config["referenceGenome"]
+        bam = config["bam"]
+    output:
+        config["wd"] + "/runWorkflow.py"
+    params:
+        wd = config["wd"],
+        regions = config["regions"]
+    conda:
+        config["environment"]
+    threads: 1
+    shell:
+        "configManta.py --bam {input.bam} --referenceFasta {input.ref} --runDir {params.wd} --callRegions {params.regions}"
+
+rule manta_call_platinum:
+    input:
+        config["wd"] + "/runWorkflow.py"
+    output:
+        config["wd"] + "/results/variants/diploidSV.vcf.gz"
+    conda:
+        config["environment"]
+    threads: 1
+    log:
+        "logs/manta/platinum.manta.log"
+    shell:
+        "({input} -m local -j 1) 2> {log}"
+
+rule moveResults:
+    input:
+        config["wd"] + "/results/variants/diploidSV.vcf.gz"
+    output:
+        config["vcf"]
+    threads: 1
+    shell:
+        "mv {input} {output}"

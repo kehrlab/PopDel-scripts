@@ -1,0 +1,14 @@
+projectName:
+   platinum
+environment:
+   manta.environment.yml
+referenceGenome:
+   _data/GRCh38/BWA/hs38/hs38.fa
+regions:
+   scripts/manta/GRCh38.regions.bed.gz
+bam:
+   NA12878/NA12878_illu_platinum_GRCh38.CUBI.bam
+wd:
+   tmp/manta/platinum
+vcf:
+   calls/manta/platinum.manta.vcf.gz

@@ -1,0 +1,35 @@
+configfile: "scripts/smoove/config.yml"
+
+TIME="/usr/bin/time -f \"%e\\t%U\\t%S\\t%M\" -o "
+
+rule all:
+    input:
+        config["outCalls"]
+
+rule smoove_call_platinum:
+    input:
+        ref = config["reference"],
+        bam = config["bam"]
+    output:
+        temp(config["tmp"] + "/" + config["project"] + "-smoove.genotyped.vcf.gz")
+    params:
+        project = config["project"],
+        tmp = config["tmp"],
+        excludeC = config["excludeChroms"],
+        excludeR = config["excludeRegions"]
+    log:
+        "logs/smoove/" + config["project"] + ".smoove.log"
+    conda:
+        "smoove.env"
+    threads:
+        1
+    shell:
+        TIME + "{log} smoove call -x --outdir {params.tmp} --name {params.project} --exclude {params.excludeR} --excludechroms {params.excludeC} --fasta {input.ref} -p {threads} --genotype {input.bam}"
+
+rule moveResults:
+    input:
+        config["tmp"] + "/" + config["project"] + "-smoove.genotyped.vcf.gz"
+    output:
+        protected(config["outCalls"])
+    shell:
+        "cp {input} {output}"

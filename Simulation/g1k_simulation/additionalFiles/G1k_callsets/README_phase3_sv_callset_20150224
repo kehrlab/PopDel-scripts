@@ -1,0 +1,104 @@
+This README describes the integrated structural variant map of the 1000 Genomes Project phase3 data.
+
+The directory contains the final structural variant call set with phased genotypes for chr1-22 and chrX, 
+derived from the analysis of the phase3 sequencing data linked in the below sequence and alignment index files.
+
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/sequence_indices/20130502.analysis.sequence.index
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/alignment_indices/20130502.low_coverage.alignment.index
+
+This variant set contains 2504 individuals from 26 populations. The list of all the samples in the data set and 
+their population, super population and gender can be found in the file:
+
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/integrated_call_samples_v3.20130502.ALL.panel
+
+Different structural variant callers were used to identify the variant sites in this set. The input call sets can be found at
+
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/input_callsets
+
+Large deletions were genotyped using Beagle and phased with the Shapeit2 method from Oxford. MVNCall, also from Oxford was used to 
+add other structural variant classes. The genotype likelihoods estimated by Shapeit2 and MVNCall can be found at 
+
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/genotype_likelihoods
+
+The different structural variant classes can be identified using the SVTYPE tag in the INFO column. Below is a list of possible SVTYPEs:
+
+ALU: Alu element insertion
+LINE1: Line1 transposable element insertion
+SVA: SVA element insertion, SVA stands for SINE-VNTR-Alu, it is a composite retrotransposon insertion
+INS: Nuclear mitochondrial insertion
+DEL: bi-allelic deletion
+DUP: bi-allelic duplication
+INV: bi-allelic inversion
+CNV: multi-allelic copy-number variant
+
+The DEL class has been further re-classified into DEL_ALU, DEL_LINE1 and DEL_SVA if the identified deletion appeared to 
+correspond to a reference mobile element insertion.
+
+The source call set can be identified using the CS tag in the INFO column. Below is a list of possible CSs:
+
+ALU_umary: Alu element insertion call set from the University of Maryland (MELT algorithm)
+L1_umary: Line1 transposable element insertion from the University of Maryland (MELT algorithm)
+SVA_umary: SVA element insertion from the University of Maryland (MELT algorithm)
+NUMT_umich: Nuclear mitochondrial insertion from the University of Michigan (NumtS algorithm)
+DEL_union: Union deletions genotypted by GenomeSTRiP and variant sites identified by GenomeSTRiP, Breakdancer, CNVnator, Delly and Variation Hunter.
+DEL_pindel: Small deletions (<1kbp) from Washington University (Pindel algorithm)
+INV_delly: Bi-allelic simple inversions from EMBL (Delly algorithm)
+CINV_delly: Bi-allelic complex inversions from EMBL (Delly algorithm)
+DUP_gs: Bi-allelic duplications and copy-number variants from Broad Institute (GenomeSTRiP algorithm)
+DUP_delly: Bi-allelic tandem duplications from EMBL (Delly algorithm)
+DUP_uwash: Bi-allelic deletions, duplications and copy-number variants from University of Washington (SSF algorithm)
+
+Most SVs are part of the 1000GP marker paper, except for DEL_pindel and CINV_delly. 
+A complete list of the differences between the marker paper and the SV paper can be found here:
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/SVs_missing_from_main_release/
+
+Since different structural variant callers have been used in the project a large number of variant sites have been merged in the final release. 
+For a merged call the collapsed variant site IDs are listed in the MC tag in the INFO column.
+
+Besides the integrated SV map, this directory also contains a call set with phased genotypes of complex deletions identified by Pindel where 
+NA12878 was required to be a carrier for validation purposes:
+
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/integrated_sv_map/ALL.autosomes.pindel.20130502.complexindex.low_coverage.genotypes.vcf.gz 
+
+The supporting sub-directory contains the following resources:
+
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/integrated_sv_map/supporting
+
+./CHM1: CHM1 illumina and PacBio sequencing data used for validation purposes
+./NA12878: NA12878 Illumina and PacBio sequencing data used for validation purposes
+./acgh: aCGH data used for validation purposes
+./breakpoints: Breakpoint resolved SVs, most of which have been assembled by TIGRA-SV and were subsequently analysed using AGE and CROSSMATCH
+./irs_matrices: Intensity matrices used in the IRS test for bi-allelic deletions, duplications and copy-number variants
+
+The supporting Complete Genomics structural variant call sets are available here: 
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/cgi_variant_calls/filtered_calls/ALL.wgs.cgi_from_um.20131022.deletions.genotypes.fullFilter.vcf.gz
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/cgi_variant_calls/filtered_calls/ALL.wgs.cgi_from_um.20131022.duplications.genotypes.fullFilter.vcf.gz
+
+Here are some basic statistics about the structural variant call set.
+
+samples: 2504
+records: 68818
+
+ALUs: 12748
+LINE1s: 3048
+SVAs: 835
+DELs: 40975
+DEL_ALUs: 1238
+DEL_LINE1s: 56
+DEL_SVAs: 9
+DEL_HERVs: 1
+DUPs: 6025
+CNVs: 2929
+INVs: 786
+INSs: 168
+
+All male genotypes are unknown on chrX for the union deletions
+ because the genotype encoding was not picked up correctly by the phasing
+ software. Please refer to the unphased union deletion genotypes for chrX
+ where 0/1 encodes copy-number 1 and 1/1 encodes copy-number 0. The unphased
+ union deletions are available here:
+ ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130723_phase3_wg/union_gls/ALL.wgs.phase3_dels_merged_genome_strip.20130502.dels.low_coverage.genotypes.vcf.gz
+
+Previous versions of these files are available here:
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/withdrawn/phase3/integrated_sv_map/
+

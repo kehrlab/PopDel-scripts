@@ -3,9 +3,9 @@ cexLegend <- 1.25
 
 calls <- as.data.frame(t(read_delim("pca/popdel.calls", "\t", escape_double = FALSE, trim_ws = TRUE)))
 #calls <- as.data.frame(t(read_delim("pca/delly.calls", "\t", escape_double = FALSE, trim_ws = TRUE)))
-#calls <- as.data.frame(t(read_delim("pca/lumpy.calls", "\t", escape_double = FALSE, trim_ws = TRUE)))
+#calls <- as.data.frame(t(read_delim("pca/smoove.calls", "\t", escape_double = FALSE, trim_ws = TRUE)))
 
-perSampleVar <- as.data.frame(read.table("popdel.NoCentromeres.perSampleVariants.GTfilter.txt"))
+perSampleVar <- as.data.frame(read.table("pca/popdel.NoCentromeres.perSampleVariants.GTfilter.txt"))
 tmp <- perSampleVar[,1]
 perSampleVar <- as.data.frame(perSampleVar[,2])
 row.names(perSampleVar) <- tmp
@@ -78,13 +78,13 @@ colors <- c("red2", "green3", "blue2")
 
 summary(calls.pca) ## To get the variance of the first two PC's
 
-#pdf("pca.pdf", width=3, height=3)
-par(mfrow=c(1,1), mar=c(3.5,4,0.5,0.5))
+pdf("pca_boxplot.pdf", width=6, height=3)
+par(mfrow=c(1,2), mar=c(3.5,4,0.5,0.5))
 plot(calls.pca$x[,1:2], col = colors[groups], bty="n", frame=FALSE, pch = 20, cex=0.7, xlim=c(-30,30), cex.axis = 0.66,
      ylim=c(-20,20), xlab = "" , ylab = "", mgp = c(3, 0.5, 0))
 
-mtext(side=1, line=1.5, "PC1 (??% explained variance)", cex = 0.75) ## IMPORTANT UPDATE explained var when changing something!
-mtext(side=2, line=1.5, "PC2 (??% explained variance)", cex = 0.75)
+mtext(side=1, line=1.5, "PC1 (5.5% explained variance)", cex = 0.75) ## IMPORTANT UPDATE explained var when changing something!
+mtext(side=2, line=1.5, "PC2 (2.6% explained variance)", cex = 0.75)
 legend("bottomright" , inset=0.01, legend=c("AFR", "EAS", "EUR"),
        col = colors, pch = 20, cex=0.8, lwd=-1, bty="n", lty="47")
 #dev.off()
@@ -93,17 +93,17 @@ legend("bottomright" , inset=0.01, legend=c("AFR", "EAS", "EUR"),
 boxplot(perSampleVar$variants ~ perSampleVar$ancestry, notch=TRUE, ylab = "", bty = "n", frame=FALSE,
        boxwex = 1/4,
        outline = FALSE,
-       ylim=c(1300,2600),
+       ylim=c(1000, 1800),
        lwd = 1.5,
        cex.lab =0.75,
        cex.axis = 0.66,
        par(mgp = c(3, 0.5, 0)))
 mtext(side=2, line=1.5, "Deletions per sample", cex = 0.75)
 stripchart(perSampleVar$variants ~ perSampleVar$ancestry, vertical = TRUE, method = "jitter", add = TRUE, pch = 20, col = colors, cex=0.3)
-#dev.off()
+dev.off()
 
 
 #Count HET and HOM variants
-hetHom <- read_delim("pca/popdel.NoCentromeres.GTfilter.hetHom.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
-mean(hetHom$HET_PL27)
-mean(hetHom$HOM_PL27)
+    hetHom <- read_delim("pca/popdel.NoCentromeres.GTfilter.hetHom.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
+mean(hetHom$het)
+mean(hetHom$hom)

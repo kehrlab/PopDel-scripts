@@ -1,0 +1,289 @@
+TIME="/usr/bin/time -f \"%e\\t%U\\t%S\\t%M\" -ao "
+
+rule all:
+    input:
+        "calls/popdel/polaris150.rnd.popdel.vcf"
+
+rule merge:
+    input:
+        chr1="calls/150singleChr/polaris150.chr1.popdel.vcf",
+        chr2="calls/150singleChr/polaris150.chr2.popdel.vcf",
+        chr3="calls/150singleChr/polaris150.chr3.popdel.vcf",
+        chr4="calls/150singleChr/polaris150.chr4.popdel.vcf",
+        chr5="calls/150singleChr/polaris150.chr5.popdel.vcf",
+        chr6="calls/150singleChr/polaris150.chr6.popdel.vcf",
+        chr7="calls/150singleChr/polaris150.chr7.popdel.vcf",
+        chr8="calls/150singleChr/polaris150.chr8.popdel.vcf",
+        chr9="calls/150singleChr/polaris150.chr9.popdel.vcf",
+        chr10="calls/150singleChr/polaris150.chr10.popdel.vcf",
+        chr11="calls/150singleChr/polaris150.chr11.popdel.vcf",
+        chr12="calls/150singleChr/polaris150.chr12.popdel.vcf",
+        chr13="calls/150singleChr/polaris150.chr13.popdel.vcf",
+        chr14="calls/150singleChr/polaris150.chr14.popdel.vcf",
+        chr15="calls/150singleChr/polaris150.chr15.popdel.vcf",
+        chr16="calls/150singleChr/polaris150.chr16.popdel.vcf",
+        chr17="calls/150singleChr/polaris150.chr17.popdel.vcf",
+        chr18="calls/150singleChr/polaris150.chr18.popdel.vcf",
+        chr19="calls/150singleChr/polaris150.chr19.popdel.vcf",
+        chr20="calls/150singleChr/polaris150.chr20.popdel.vcf",
+        chr21="calls/150singleChr/polaris150.chr21.popdel.vcf",
+        chr22="calls/150singleChr/polaris150.chr22.popdel.vcf",
+        chrX="calls/150singleChr/polaris150.chrX.popdel.vcf"
+    output:
+        "calls/popdel/polaris150.rnd.popdel.vcf"
+    threads: 1
+    shell:
+        "awk 'FNR<=219 && NR>219{{next;}}{{print}}' {input.chr1} {input.chr10} {input.chr11} {input.chr12} {input.chr13} {input.chr14} {input.chr15} {input.chr16} {input.chr17} {input.chr18} {input.chr19} {input.chr2} {input.chr20} {input.chr21} {input.chr22} {input.chr3} {input.chr4} {input.chr5} {input.chr6} {input.chr7} {input.chr8} {input.chr9} {input.chrX} > {output}"
+
+rule chr1:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr1.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr1.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr1 -o {output}"
+
+rule chr2:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr2.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr2.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr2 -o {output}"
+
+rule chr3:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr3.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr3.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr3 -o {output}"
+
+rule chr4:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr4.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr4.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr4 -o {output}"
+
+rule chr5:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr5.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr5.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr5 -o {output}"
+
+rule chr6:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr6.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr6.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr6 -o {output}"
+
+rule chr7:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr7.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr7.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr7 -o {output}"
+
+rule chr8:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr8.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr8.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr8 -o {output}"
+
+rule chr9:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr9.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr9.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr9 -o {output}"
+
+rule chr10:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr10.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr10.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr10 -o {output}"
+
+rule chr11:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr11.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr11.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr11 -o {output}"
+
+rule chr12:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr12.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr12.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr12 -o {output}"
+
+rule chr13:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr13.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr13.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr13 -o {output}"
+
+rule chr14:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr14.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr14.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr14 -o {output}"
+
+rule chr15:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr15.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr15.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr15 -o {output}"
+
+rule chr16:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr16.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr16.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr16 -o {output}"
+
+rule chr17:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr17.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr17.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr17 -o {output}"
+
+rule chr18:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr18.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr18.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr18 -o {output}"
+
+rule chr19:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr19.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr19.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr19 -o {output}"
+
+rule chr20:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr20.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr20.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr20 -o {output}"
+
+rule chr21:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr21.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr21.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr21 -o {output}"
+
+rule chr22:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chr22.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chr22.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chr22 -o {output}"
+
+rule chrX:
+    input:
+        "scripts/popdelCall/profilePaths/150.rnd.profiles"
+    output:
+        ("calls/150singleChr/polaris150.chrX.popdel.vcf")
+    log:
+        "logs/popdel/call/150polaris_rnd_call.chrX.log"
+    threads: 4
+    shell:
+      TIME + "{log} ~/Development/PopDel/popdel call {input} -r chrX -o {output}"

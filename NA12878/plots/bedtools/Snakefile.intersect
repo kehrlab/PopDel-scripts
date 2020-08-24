@@ -2,32 +2,30 @@ configfile: "scripts/bedtools/config.yaml"
 
 
 ##### DO NOT TOUCH THIS! ####
-TRUTH_in=expand("{file}{c}", file=config["truthFile"], c=config["filterCentromeres"])
-TRUTH_full=config["fullTruthFile"]
+TRUTH=config["truth"]
+TRUTHNOCENTROMERES="{out}/truth.{L}-{R}.NoCentromeres.bed"
 
 OVERLAP=config["overlap"]
 
-POPDELBED_out=expand("{out}popdel.deletions.{L}-{R}.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"])
-POPDELBED_in=expand("{out}popdel.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
-DELLYBED_out=expand("{out}delly.deletions.{L}-{R}.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"])
-DELLYBED_in=expand("{out}delly.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
-LUMPYBED_out=expand("{out}lumpy.deletions.{L}-{R}.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"])
-LUMPYBED_in=expand("{out}lumpy.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
+POPDELBED="{out}/popdel.deletions.{L}-{R}.NoCentromeres.bed"
+DELLYBED="{out}/delly.deletions.{L}-{R}.NoCentromeres.bed"
+MANTABED="{out}/manta.deletions.{L}-{R}.NoCentromeres.bed"
+SMOOVEBED="{out}/smoove.deletions.{L}-{R}.NoCentromeres.bed"
 
-POPDELTP=expand("{out}intersects/popdel/{t}/tp.popdel.{L}-{R}.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"])
-LUMPYTP=expand("{out}intersects/lumpy/{t}/tp.lumpy.{L}-{R}.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"])
-DELLYTP=expand("{out}intersects/delly/{t}/tp.delly.{L}-{R}.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"])
+POPDELTP="{out}/tp.popdel.{L}-{R}.bed"
+SMOOVETP="{out}/tp.smoove.{L}-{R}.bed"
+DELLYTP="{out}/tp.delly.{L}-{R}.bed"
+MANTATP="{out}/tp.manta.{L}-{R}.bed"
 
-INTERPOPDELDELLY=expand("{out}intersects/intersect.popdel.delly.bed", out=config["outpath"])
-INTERPOPDELLUMPY=expand("{out}intersects/intersect.popdel.lumpy.bed", out=config["outpath"])
-INTERDELLYLUMPY=expand("{out}intersects/intersect.delly.lumpy.bed", out=config["outpath"])
-INTERTPPOPDELDELLY=expand("{out}intersects/intersect.tp.popdel.delly.bed", out=config["outpath"])
-INTERTPPOPDELLUMPY=expand("{out}intersects/intersect.tp.popdel.lumpy.bed", out=config["outpath"])
-INTERTPDELLYLUMPY=expand("{out}intersects/intersect.tp.delly.lumpy.bed", out=config["outpath"])
-INTERPOPDELDELLYLUMPY=expand("{out}intersects/intersect.popdel.delly.lumpy.bed", out=config["outpath"])
-INTERTPPOPDELDELLYLUMPY=expand("{out}intersects/intersect.tp.popdel.delly.lumpy.bed", out=config["outpath"])
+INTERPOPDELDELLY="{out}/intersect.popdel.delly.{L}-{R}.bed"
+INTERPOPDELSMOOVE="{out}/intersect.popdel.smoove.{L}-{R}.bed"
+INTERPOPDELMANTA="{out}/intersect.popdel.manta.{L}-{R}.bed"
+INTERTPPOPDELDELLY="{out}/intersect.tp.popdel.delly.{L}-{R}.bed"
+INTERTPPOPDELSMOOVE="{out}/intersect.tp.popdel.smoove.{L}-{R}.bed"
+INTERTPPOPDELMANTA="{out}/intersect.tp.popdel.manta.{L}-{R}.bed"
 
-COUNT=expand("{out}counts.{t}.{L}-{R}{c}.{o}.rigorous.tsv", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"], c=config["filterCentromeres"], o=config["overlap"])
+
+COUNT=expand("{out}/counts.{truth}.{L}-{R}.{o}.tsv", out=config["outpath"], truth=config["truthSet"], L=config["left"], R=config["right"], o=config["overlap"])
 
 ##### DO NOT TOUCH THIS! ####
 
@@ -35,71 +33,80 @@ rule all:
    input:
       COUNT
 
+rule filterTruth:
+    input:
+        TRUTH
+    output:
+        temp("{out}/truth.{L}-{R, 10000}.bed")
+    params:
+        getRange="awk '{if ($3-$2 >= {L} && $3-$2 <= {R}){print $0}}'"
+    shell:
+        "grep -v \"^X\" {input} | grep -v \"^Y\" | {params.getRange} | sort -u -k1,1 -k2n,2n -k3n,3n > {output}"
+
+rule centromereFilterTruth:
+    input:
+        truth="{out}/truth.{L}-{R}.bed",
+        regions=config["centromereFile"]
+    output:
+        temp(TRUTHNOCENTROMERES)
+    shell:
+        "bedtools intersect -v -a {input.truth} -b {input.regions} > {output}"
+
 rule vcf2bed_popdel:
    input:
       config["vcfs"]["popdel"]
    output:
-      temp(POPDELBED_out)
+      temp("{out}/popdel.deletions.{L}-{R, 10000}.bed",)
    params:
-      getRange=expand("awk -v OFS='\\t' '{{if ($9 >= {L} && $9 <= {R}){{print$1,$2,$2+$9}}}}'", L=config["left"], R=config["right"])
+      getRange="awk -v OFS='\\t' '{if ($9 >= {L} && $9 <= {R}){print $1,$2,$2+$9}}'"
    shell:
-      "grep -v ^# {input} | grep -v \"^chrUn\" | grep -v \"random\" | grep -v \"chrY\" | sed 's/;/\\t/g' | sed -e 's;SVLEN=-;;g' | {params.getRange} | sort -u -k1,1 -k2,2n -k3,3n > {output}"
+      "grep -v ^# {input} | grep -v \"^chrUn\" | grep -v \"random\" | grep -v \"chrY\" | grep -v \"chrX\" | sed 's/;/\\t/g' | sed -e 's;SVLEN=-;;g' | {params.getRange} | sort -u -k1,1 -k2n,2n -k3n,3n > {output}"
 
 rule vcf2bed_delly:
    input:
       config["vcfs"]["delly"]
    output:
-      temp(DELLYBED_out)
+      temp("{out}/delly.deletions.{L}-{R, 10000}.bed",)
    params:
-      getRange=expand("awk '{{if($3 - $2 >= {L} && $3 - $2 <= {R}){{print $0}}}}'", L=config["left"], R=config["right"])
+      getRange="awk '{if($3 - $2 >= {L} && $3 - $2 <= {R}){print $0}}'"
    shell:
-      "grep -v ^# {input} | grep -v \"0/0\" | grep -v \"^chrUn\" | grep -v \"random\" | grep -v \"chrM\" | grep -v \"chrEBV\" | grep -v \"chrY\" | awk '{{if($5==\"<DEL>\" && $7==\"PASS\"){{print $0}}}}' | sed 's/;/\\t/g' | cut -f 1,2,12 | sed 's/END=//g' | {params.getRange} | sort -u -k1,1 -k2,2n -k3,3n > {output}"
+      "grep -v ^# {input} | grep -v \"0/0\" | grep -v \"^chrUn\" | grep -v \"random\" | grep -v \"chrM\" | grep -v \"chrEBV\" | grep -v \"chrY\" | grep -v \"chrX\" | grep \"SVTYPE=DEL\" | awk '{{if($7==\"PASS\"){{print $0}}}}' | sed 's/;/\\t/g' | cut -f 1,2,12 | sed 's/END=//g' | {params.getRange} | sort -u -k1,1 -k2n,2n -k3n,3n > {output}"
 
-rule vcf2bed_lumpy:
+rule vcf2bed_smoove:
    input:
-      config["vcfs"]["lumpy"]
+      config["vcfs"]["smoove"]
    output:
-      temp(LUMPYBED_out)
+      temp("{out}/smoove.deletions.{L}-{R, 10000}.bed",)
    params:
-      getRange=expand("awk '{{if($3 - $2 >= {L} && $3 - $2 <= {R}){{print $0}}}}'", L=config["left"], R=config["right"])
+      getRange="awk '{if($3 - $2 >= {L} && $3 - $2 <= {R}){print $0}}'"
    shell:
-      "grep -v ^# {input} | grep -v \"0/0\" | grep -v \"^chrUn\" | grep -v \"random\" | grep -v \"chrM\" | grep -v \"chrEBV\" | grep -v \"chrY\" | awk '{{if($5==\"<DEL>\"){{print $0}}}}' | sed 's/;/\\t/g' | cut -f 1,2,10 | sed 's/END=//g' | {params.getRange} | sort -u -k1,1 -k2,2n -k3,3n > {output}"
+      "zcat {input} | grep -v ^# | grep -v \"^chrUn\" | grep -v \"random\" | grep -v \"chrM\" | grep -v \"chrEBV\" | grep -v \"chrY\" | grep -v \"chrX\" | grep \"SVTYPE=DEL\" | sed 's/;/\\t/g' | cut -f 1,2,10 | sed 's/END=//g' | {params.getRange} | sort -n -u -k1,1 -k2n,2n -k3n,3n > {output}"
 
-rule centromereFilterTruth:
+rule vcf2bed_manta:
    input:
-      truth=config["truthFile"],
-      regions=config["centromereFile"]
+      config["vcfs"]["manta"]
    output:
-      temp(expand("{truthFile}_noCentromeres", truthFile=config["truthFile"]))
+      temp("{out}/manta.deletions.{L}-{R, 10000}.bed",)
+   params:
+      getRange="awk '{if($3 - $2 >= {L} && $3 - $2 <= {R}){print $0}}'"
    shell:
-      "bedtools intersect -wa -v -a {input.truth} -b {input.regions} > {output}"
+      "zcat {input} | grep -v ^# | grep \"SVTYPE=DEL\" | grep -v \"^chrUn\" | grep -v \"random\" | grep -v \"chrM\" | grep -v \"chrEBV\" | grep -v \"chrY\" | grep -v \"chrX\" |  sed -e 's/;/\\t/g' -e 's/END=//g' | cut -f 1,2,8 | {params.getRange} | sort -u -k1,1 -k2n,2n -k3n,3n > {output}"
 
 rule centromereFilterCalls:
    input:
-      calls=expand("{out}{{tool}}.deletions.{L}-{R}.noDup.bed", out=config["outpath"], L=config["left"], R=config["right"]),
-      regions=config["centromereFile"]
+      calls="{out}/{tool}.deletions.{L}-{R}.bed",
+      centro=config["centromereFile"]
    output:
-      temp(expand("{out}{{tool}}.deletions.{L}-{R}.noDup.bed_noCentromeres", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"]))
+     temp("{out}/{tool}.deletions.{L}-{R}.NoCentromeres.bed")
    shell:
-      "bedtools intersect -wa -v -a {input.calls} -b {input.regions} > {output}"
-
-rule get_fp:
-   input:
-      calls=expand("{out}{{tool}}.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"]),
-      truth=TRUTH_in
-   output:
-      temp(expand("{out}intersects/{{tool}}/{t}/fp.{{tool}}.{L}-{R}.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"]))
-   params:
-      OVERLAP
-   shell:
-      "bedtools intersect -v -r -f {params} -a {input.calls} -b {input.truth} > {output}"
+      "bedtools intersect -v -a {input.calls} -b {input.centro} > {output}"
 
 rule get_tp:
    input:
-      calls=expand("{out}{{tool}}.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"]),
-      truth=TRUTH_in
+      calls="{out}/{tool}.deletions.{L}-{R}.NoCentromeres.bed",
+      truth=TRUTHNOCENTROMERES
    output:
-      temp(expand("{out}intersects/{{tool}}/{t}/tp.{{tool}}.{L}-{R}.bed", out=config["outpath"], t=config["truthSet"], L=config["left"], R=config["right"]))
+      temp("{out}/tp.{tool}.{L}-{R}.bed")
    params:
       OVERLAP
    shell:
@@ -107,21 +114,10 @@ rule get_tp:
 
 rule overlapPopDelX:
    input:
-      first=POPDELBED_in,
-      second=expand("{out}{{tool, (delly|lumpy)}}.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"]),
+      first=POPDELBED,
+      second="{out}/{tool}.deletions.{L}-{R}.NoCentromeres.bed"
    output:
-      temp(expand("{out}intersects/intersect.popdel.{{tool, (delly|lumpy)}}.bed", out=config["outpath"]))
-   params:
-      OVERLAP
-   shell:
-      "bedtools intersect -wa -u -r -f {params} -a {input.first} -b {input.second} > {output}"
-
-rule overlapDellyLumpy:
-   input:
-      first=DELLYBED_in,
-      second=LUMPYBED_in
-   output:
-      temp(INTERDELLYLUMPY)
+      temp("{out}/intersect.popdel.{tool, (delly|smoove|manta)}.{L}-{R}.bed")
    params:
       OVERLAP
    shell:
@@ -129,87 +125,55 @@ rule overlapDellyLumpy:
 
 rule overlapTpPopdelX:
    input:
-      first=POPDELTP,
-      second=expand("{out}{{tool, (delly|lumpy)}}.deletions.{L}-{R}.noDup.bed{c}", out=config["outpath"], L=config["left"], R=config["right"], c=config["filterCentromeres"])
+      first="{out}/tp.popdel.{L}-{R}.bed",
+      second="{out}/tp.{tool}.{L}-{R}.bed"
    output:
-      temp(expand("{out}intersects/intersect.tp.popdel.{{tool, (delly|lumpy)}}.bed", out=config["outpath"]))
+      temp("{out}/intersect.tp.popdel.{tool, (delly|smoove|manta)}.{L}-{R}.bed")
    params:
       OVERLAP
    shell:
       "bedtools intersect -wa -u -r -f {params} -a {input.first} -b {input.second} > {output}"
 
-rule overlapTpDellyLumpy:
-   input:
-      first=DELLYTP,
-      second=LUMPYBED_in
-   output:
-      temp(INTERTPDELLYLUMPY)
-   params:
-      OVERLAP
-   shell:
-      "bedtools intersect -wa -u -r -f {params} -a {input.first} -b {input.second} > {output}"
-
-rule overlapPopDelDellyLumpy:
-   input:
-      first=INTERPOPDELDELLY,
-      second=LUMPYBED_in
-   output:
-      temp(INTERPOPDELDELLYLUMPY)
-   params:
-      OVERLAP
-   shell:
-      "bedtools intersect -wa -u -r -f {params} -a {input.first} -b {input.second} > {output}"
-
-rule overlapTpPopDelDellyLumpy:
-   input:
-      first=INTERTPPOPDELDELLY,
-      second=LUMPYBED_in
-   output:
-      temp(INTERTPPOPDELDELLYLUMPY)
-   params:
-      OVERLAP
-   shell:
-      "bedtools intersect -wa -u -r -f {params} -a {input.first} -b {input.second} > {output}"
 
 rule getCounts:
    input:
-      truth=TRUTH_in,
-      popdel=POPDELBED_in,
-      delly=DELLYBED_in,
-      lumpy=LUMPYBED_in,
+      truth=TRUTHNOCENTROMERES,
+      popdel=POPDELBED,
+      delly=DELLYBED,
+      smoove=SMOOVEBED,
+      manta=MANTABED,
       popdel_delly=INTERPOPDELDELLY,
-      popdel_lumpy=INTERPOPDELLUMPY,
-      delly_lumpy=INTERDELLYLUMPY,
+      popdel_smoove=INTERPOPDELSMOOVE,
+      popdel_manta=INTERPOPDELMANTA,
       tp_popdel=POPDELTP,
       tp_delly=DELLYTP,
-      tp_lumpy=LUMPYTP,
+      tp_smoove=SMOOVETP,
+      tp_manta=MANTATP,
       tp_popdel_delly=INTERTPPOPDELDELLY,
-      tp_popdel_lumpy=INTERTPPOPDELLUMPY,
-      tp_delly_lumpy=INTERTPDELLYLUMPY,
-      popdel_delly_lumpy=INTERPOPDELDELLYLUMPY,
-      tp_popdel_delly_lumpy=INTERTPPOPDELDELLYLUMPY
+      tp_popdel_smoove=INTERTPPOPDELSMOOVE,
+      tp_popdel_manta=INTERTPPOPDELMANTA
    output:
-      COUNT
+      expand("{{out}}/counts.{truthSet}.{{L}}-{{R}}.{overlap}.tsv", truthSet=config["truthSet"], overlap=config["overlap"])
    shell:
       """
       set +o pipefail
-      wc -l {input.truth} {input.popdel} {input.delly} {input.lumpy} | head -n4 > {output}
-      wc -l {input.tp_popdel} {input.tp_delly} {input.tp_lumpy} {input.popdel_delly} {input.popdel_lumpy} {input.delly_lumpy} {input.tp_popdel_delly} {input.tp_popdel_lumpy} {input.tp_delly_lumpy} {input.popdel_delly_lumpy} {input.tp_popdel_delly_lumpy} | head -n11 >> {output}
+      wc -l {input.truth} {input.popdel} {input.delly} {input.smoove} {input.manta} | head -n5 > {output}
+      wc -l {input.tp_popdel} {input.tp_delly} {input.tp_smoove} {input.tp_manta} {input.popdel_delly} {input.popdel_smoove} {input.popdel_manta} {input.tp_popdel_delly} {input.tp_popdel_smoove} {input.tp_popdel_manta} | head -n10 >> {output}
 
       sed -i -e \"s;{input.truth};truth;g\" \
       -e \"s;{input.popdel};popdel;g\" \
       -e \"s;{input.delly};delly;g\" \
-      -e \"s;{input.lumpy};lumpy;g\" \
+      -e \"s;{input.smoove};smoove;g\" \
+      -e \"s;{input.manta};manta;g\" \
       -e \"s;{input.tp_popdel};truth_popdel;g\" \
       -e \"s;{input.tp_delly};truth_delly;g\" \
-      -e \"s;{input.tp_lumpy};truth_lumpy;g\" \
+      -e \"s;{input.tp_smoove};truth_smoove;g\" \
+      -e \"s;{input.tp_manta};truth_manta;g\" \
       -e \"s;{input.popdel_delly};popdel_delly;g\" \
-      -e \"s;{input.popdel_lumpy};popdel_lumpy;g\" \
-      -e \"s;{input.delly_lumpy};delly_lumpy;g\" \
+      -e \"s;{input.popdel_smoove};popdel_smoove;g\" \
+      -e \"s;{input.popdel_manta};popdel_manta;g\" \
       -e \"s;{input.tp_popdel_delly};truth_popdel_delly;g\" \
-      -e \"s;{input.tp_popdel_lumpy};truth_popdel_lumpy;g\" \
-      -e \"s;{input.tp_delly_lumpy};truth_delly_lumpy;g\" \
-      -e \"s;{input.popdel_delly_lumpy};popdel_delly_lumpy;g\" \
-      -e \"s;{input.tp_popdel_delly_lumpy};truth_popdel_delly_lumpy;g\" \
+      -e \"s;{input.tp_popdel_smoove};truth_popdel_smoove;g\" \
+      -e \"s;{input.tp_popdel_manta};truth_popdel_manta;g\" \
       {output}
       """

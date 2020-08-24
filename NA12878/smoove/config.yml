@@ -1,0 +1,14 @@
+project:
+   platinum
+reference:
+   data/GRCh38/BWA/hs38/hs38.fa
+excludeChroms:
+   "chrY,chrM,chrEBV,~.*_.*"       ##ignore chrY, chrM, chrEBV and random contigs
+excludeRegions:
+   scripts/smoove/exclude.cnvnator_100bp.GRCh38.20170403.bed
+tmp:
+   tmp/smoove/platinum
+bam:
+   data/illumina_platinum_genomes/NA12878/NA12878_illu_platinum_GRCh38.CUBI.bam
+outCalls:
+   calls/smoove/platinum.smoove.vcf.gz

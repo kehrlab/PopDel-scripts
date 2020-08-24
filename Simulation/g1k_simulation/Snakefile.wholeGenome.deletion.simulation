@@ -1,0 +1,626 @@
+configfile: "scripts/config.yml"
+
+wildcard_constraints:
+    chromosome="\w+",
+    sample="\w+",
+    hapNum="[12]"
+
+def maxNumToBatches(maxNum):
+    return [x for x in list(range(1, 10)) + list(range(10, 100, 10)) + list(range(100, 1001, 100)) if x <= int(maxNum)]
+
+def assignFileSuffix(tool):
+    if tool == "popdel":
+        return "vcf"
+    elif tool == "delly":
+        return "bcf"
+    elif tool == "lumpy":
+        return "vcf.gz"
+    elif tool == "manta":
+        return "vcf.gz"
+
+def numToSampleString(prefix, i):
+    if i < 10:
+        return prefix + "0000" + str(i)
+    elif i < 100:
+        return prefix + "000" + str(i)
+    elif i < 1000:
+        return prefix + "00" + str(i)
+    elif i < 10000:
+        return prefix + "0" + str(i)
+    elif i < 100000:
+        return prefix + str(i)
+
+def getSampleNames(prefix, sampleNum):
+    s = []
+    for i in range(1, int(sampleNum) + 1):
+        s.append(numToSampleString(prefix, i))
+    return s
+
+def samplesToOutPrefix(basePath, chromosomes, sampleNames):
+    out = []
+    for c in chromosomes:
+        for s in sampleNames:
+            out.append(basePath + "/" + c + "/" + s + "/" + c + "." + s)
+    return out
+
+def batchToFiles(basePath, batchNum, chromosome, suffix):
+    s = []
+    prefixes = samplesToOutPrefix(basePath, [chromosome], getSampleNames("S", batchNum))
+    for p in prefixes:
+        s.append(p + suffix)
+    return s
+
+def getFinishedChrNum(chromosomes, index):
+    if index >= len(chromosomes):
+        return "NAN"
+    else:
+        return chromosomes[index]
+
+rule all:
+    input:
+        #lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + chromosome + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for chromosome in config["chromosomes"] for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+        expand(config["tmpDir"] + "/finishedChromosomes/{c}", c = config["chromosomes"])
+
+rule extractDeletions:
+    input:
+        config["g1kSVset"]
+    output:
+        protected(config["varOutputDir"] + "/variants/{chromosome}/{chromosome}.deletions.txt")
+    params:
+        chrom=lambda wildcards: wildcards.chromosome[3:],  ##ignore the "chr" prefix for the chromosomes for compatibility with hs37d5
+    # log:
+    #     config["logDir"] + "/generateDeletions/{chromosome}/{chromosome}.generateDeletions.log"
+    threads: 1
+    priority: 45
+    shell:
+        "zcat {input} | cut -f 1,2,8 | grep -v ^# | grep \"SVTYPE=DEL\" | grep \"^{params.chrom}\" | awk \'{{split($3, a, \"[;=]\");sub(/.*;END=/,X,$3);sub(/;.*/,X,$3); if ($3-$2 >= 100 && $3-$2 <= 10000) print $1,$2,$3-$2,a[4]}}\' > {output}"
+
+rule generateHaplotype:
+    input:
+        fasta=config["chromDir"] + "/{chromosome}/{chromosome}.fa",
+        deletions=rules.extractDeletions.output
+    output:
+        hapTxt=config["varOutputDir"] + "/variants/{chromosome}/{sample}/{chromosome}.{sample}.deletions.hap{hapNum}.txt",
+        fasta=temp(config["tmpDir"] + "/generateHaplotype/{chromosome}/{sample}/{chromosome}.{sample}.hap{hapNum}.fa")
+    wildcard_constraints:
+        sample="\w+",
+    # log:
+    #     config["logDir"] +"/generateHaplotype/{chromosome}.{sample}.hap{hapNum}.log"
+    params:
+        seed=lambda wildcards: int(wildcards.sample[1:]) * 2 - (int(wildcards.hapNum) == 1)
+    threads: 1
+    priority: 46
+    group: "simulate"
+    shell:
+        "python2 " + config["simpy"] + " {params.seed} {input.deletions} {output.hapTxt} {input.fasta} {output.fasta}"
+
+rule simulateReads:
+    input:
+        rules.generateHaplotype.output.fasta
+    output:
+        fastq1=temp(config["tmpDir"] + "/simulateReads/{chromosome}/{sample}/{chromosome}.{sample}.hap{hapNum}.1.fq"),
+        fastq2=temp(config["tmpDir"] + "/simulateReads/{chromosome}/{sample}/{chromosome}.{sample}.hap{hapNum}.2.fq"),
+        aln1=temp(config["tmpDir"] + "/simulateReads/{chromosome}/{sample}/{chromosome}.{sample}.hap{hapNum}.1.aln"),
+        aln2=temp(config["tmpDir"] + "/simulateReads/{chromosome}/{sample}/{chromosome}.{sample}.hap{hapNum}.2.aln")
+    wildcard_constraints:
+    # log:
+    #     config["logDir"] +"/simulateReads/{chromosome}.{sample}.hap{hapNum}.log"
+    params:
+        system=config["sequencingSystem"],
+        readLength=config["readLength"],
+        foldCoverage=config["foldCoverage"],
+        meanFragLen=config["meanFragmentSize"],
+        fragLenSD=config["fragSizeSD"],
+        seed=lambda wildcards: int(wildcards.sample[1:]) * 2 - (int(wildcards.hapNum) == 1),
+        prefix=config["tmpDir"] + "/simulateReads/{chromosome}/{sample}/{chromosome}.{sample}.hap{hapNum}."
+    threads: 1
+    priority: 47
+    group: "simulate"
+    shell:
+        config["illuminaArtBin"] + " -i {input} -p -ss {params.system} -l {params.readLength} -f {params.foldCoverage} -m {params.meanFragLen} -s {params.fragLenSD} -rs {params.seed} -o {params.prefix}"
+
+rule mapSimulated:
+    input:
+        reference=config["reference"],
+        fastq1=rules.simulateReads.output.fastq1,
+        fastq2=rules.simulateReads.output.fastq2
+    output:
+        temp(config["tmpDir"] + "/mapSimulated/{chromosome}/{sample}/{chromosome}.{sample}.hap{hapNum}.bam")
+    # log:
+    #     config["logDir"] +"/mapSimulated/{chromosome}.{sample}.hap{hapNum}.log"
+    params:
+        rgTag="\"@RG\\tID:{sample}\\tLB:{sample}\\tSM:{sample}\\tPL:ART-" + config["sequencingSystem"] + "\""
+    threads: 12
+    priority: 48
+    shell:
+        "bwa mem -t {threads} -M -R {params.rgTag} {input.reference} {input.fastq1} {input.fastq2} | samtools view -Sb - | samtools sort -@ {threads} -o {output}"
+
+rule mergeAlignments:
+    input:
+        bam1=config["tmpDir"] + "/mapSimulated/{chromosome}/{sample}/{chromosome}.{sample}.hap1.bam",
+        bam2=config["tmpDir"] + "/mapSimulated/{chromosome}/{sample}/{chromosome}.{sample}.hap2.bam"
+    output:
+        temp(config["tmpDir"] + "/mergeAlignments/{chromosome}/{sample}/{chromosome}.{sample}.bam")
+    # log:
+    #     config["logDir"] +"/mergeAlignments/{chromosome}.{sample}.log"
+    params:
+        hapDir=config["tmpDir"] + "/generateHaplotype/{chromosome}/{sample}",
+        simDir=config["tmpDir"] + "/simulateReads/{chromosome}/{sample}",
+        dir=config["tmpDir"] + "/mapSimulated/{chromosome}/{sample}"
+    threads: 1
+    priority: 49
+    group: "merge"
+    shell:
+        "samtools merge -c {output} {input.bam1} {input.bam2} && rm -rf {params.dir} {params.simDir} {params.hapDir}"
+
+rule indexAlignments:
+    input:
+        config["tmpDir"] + "/mergeAlignments/{chromosome}/{sample}/{chromosome}.{sample}.bam"
+    output:
+        temp(config["tmpDir"] + "/mergeAlignments/{chromosome}/{sample}/{chromosome}.{sample}.bam.bai")
+    # log:
+    #     config["logDir"] +"/indexAlignments/{chromosome}.{sample}.log"
+    priority: 50
+    threads: 1
+    group: "merge"
+    shell:
+        "samtools index {input}"
+
+### PopDel ###
+rule popdelProfile:
+    input:
+        bam=config["tmpDir"] + "/mergeAlignments/{chromosome}/{sample}/{chromosome}.{sample}.bam",
+        bai=config["tmpDir"] + "/mergeAlignments/{chromosome}/{sample}/{chromosome}.{sample}.bam.bai"
+    output:
+        temp(config["tmpDir"] + "/popdelProfile/{chromosome}/{sample}/{chromosome}.{sample}.profile")
+    # log:
+    #     config["logDir"] + "/popdelProfile/{chromosome}.{sample}.log"
+    params:
+        region=lambda wildcards: wildcards.chromosome[3:],  ##ignore the "chr" prefix for the chromosomes for compatibility with hs37d5
+        reference="GRCh37"
+    threads: 4
+    priority: 98
+    shell:
+        config["popdelBin"] + " profile {input.bam} -o {output} -r {params.reference} {params.region}"
+
+rule popdelRealpath:
+    input:
+        lambda wildcards: batchToFiles(config["tmpDir"] + "/popdelProfile", wildcards.batch, wildcards.chromosome, ".profile")
+    output:
+        temp(config["tmpDir"] + "/popdelProfile/{chromosome}/{chromosome}.{batch}.profiles")
+    wildcard_constraints:
+        batch="\d+"
+    threads: 1
+    priority: 99
+    group: "popdel"
+    shell:
+        "realpath {input} > {output}"
+
+rule popdelCall:
+    input:
+        profileList=rules.popdelRealpath.output,
+        profiles=lambda wildcards: batchToFiles(config["tmpDir"] + "/popdelProfile", wildcards.batch, wildcards.chromosome, ".profile")
+    output:
+        protected(config["varOutputDir"] + "/calls/popdel/{chromosome}.{batch}.popdel.vcf")
+    wildcard_constraints:
+        batch="\d+"
+    # log:
+    #     config["logDir"] + "/popdelCall/{chromosome}.{batch}.log"
+    params:
+        region=lambda wildcards: wildcards.chromosome[3:],  ##ignore the "chr" prefix for the chromosomes for compatibility with hs37d5
+    threads: 1
+    priority: 100
+    group: "popdel"
+    shell:
+        config["popdelBin"] + " call -o {output}_WIP -r {params.region} {input.profileList} && mv {output}_WIP {output}"  ## && sed -i -e \'s;chr[0-9]*\\.;;g\' {output}_WIP
+
+### Delly ###
+
+rule dellyCall:
+    input:
+        bam=lambda wildcards: batchToFiles(config["tmpDir"] + "/mergeAlignments", wildcards.batch, wildcards.chromosome, ".bam"),
+        bai=lambda wildcards: batchToFiles(config["tmpDir"] + "/mergeAlignments", wildcards.batch, wildcards.chromosome, ".bam.bai"),
+        reference=config["reference"]
+    output:
+        bcf=protected(config["varOutputDir"] + "/calls/delly/{chromosome}.{batch}.delly.bcf"),
+        csi=config["varOutputDir"] + "/calls/delly/{chromosome}.{batch}.delly.bcf.csi"
+    wildcard_constraints:
+        batch="\d+"
+    # log:
+    #     config["logDir"] + "/dellyCall/{chromosome}.{batch}.log"
+    conda:
+        config["dellyenv"]
+    params:
+        config["dellyFlags"]
+    threads: 1
+    priority: 100
+    shell:
+        "delly call {params} -o {output.bcf} -g {input.reference} {input.bam}"
+
+### Lumpy/Smoove ###
+
+rule smooveCall:
+    input:
+        bam=config["tmpDir"] + "/mergeAlignments/{chromosome}/{sample}/{chromosome}.{sample}.bam",
+        bai=config["tmpDir"] + "/mergeAlignments/{chromosome}/{sample}/{chromosome}.{sample}.bam.bai",
+        reference=config["reference"],
+        excludeBed=config["lumpyExcludeBed"]
+    output:
+        vcf=temp(config["tmpDir"] + "/smoove/{chromosome}/{sample}/{chromosome}.{sample}-smoove.genotyped.vcf.gz"),
+        tmp1=temp(expand(config["tmpDir"] + "/smoove/{{chromosome}}/{{sample}}/{{chromosome}}.{{sample}}{ext}", ext=["-smoove.genotyped.vcf.gz.csi", "-lumpy-cmd.sh"])),
+        tmp2=temp(expand(config["tmpDir"] + "/smoove/{{chromosome}}/{{sample}}/{{sample}}{ext}", ext=[".disc.bam", ".disc.bam.bai", ".disc.bam.orig.bam", ".histo", ".split.bam", ".split.bam.bai", ".split.bam.orig.bam"]))
+    wildcard_constraints:
+        sample="\w+"
+    # log:
+    #     config["logDir"] + "/smooveCall/{chromosome}.{sample}.log"
+    conda:
+        config["lumpyenv"]
+    threads: 1
+    priority: 97
+    params:
+        outdir=config["tmpDir"] + "/smoove/{chromosome}/{sample}",
+        tmpDir=config["tmpDir"] + "/smoove/{chromosome}/{sample}/tmp",
+        name="{chromosome}.{sample}",
+        excludeChroms=config["lumpyExcludeChroms"]
+    shell:
+        "export TMPDIR={params.tmpDir}; mkdir -p {params.tmpDir}; smoove call --name {params.name} --outdir {params.outdir} --fasta {input.reference} --excludechroms {params.excludeChroms} --exclude {input.excludeBed} --processes {threads} --genotype {input.bam}; rm -rf {params.tmpDir}"
+
+rule smooveMerge:
+    input:
+        vcf=lambda wildcards: [config["tmpDir"] + "/smoove/"  + wildcards.chromosome + "/" + str(s) + "/"  + wildcards.chromosome + "." + str(s) + "-smoove.genotyped.vcf.gz" for s in getSampleNames("S", wildcards.batch)],
+        reference=config["reference"],
+    output:
+        vcf=temp(config["tmpDir"] + "/smoove/{chromosome}/{batch}/{chromosome}.{batch}.sites.vcf.gz"),
+        tmp=temp(config["tmpDir"] + "/smoove/{chromosome}/{batch}/{chromosome}.{batch}.smoove-counts.html")
+    wildcard_constraints:
+        batch="[1-9]\d+|[2-9]"   ## Match all batchNums except batch 1. Batch 1 has to be processes by the rule smooveSingle.
+    # log:
+    #     config["logDir"] + "/smooveMerge/{chromosome}.{batch}.log"
+    conda:
+        config["lumpyenv"]
+    threads: 1
+    priority: 98
+    params:
+        tmpDir=config["tmpDir"] + "/smoove/{chromosome}/{batch}/tmp", ## Try this to avoid collision of smoove's tmp files.
+        outdir=config["tmpDir"] + "/smoove/{chromosome}/{batch}",
+        name="{chromosome}.{batch}"
+    shell:
+        "export TMPDIR={params.tmpDir}; mkdir -p {params.tmpDir}; smoove merge --name {params.name} -f {input.reference} --outdir {params.outdir} {input.vcf}; rm -rf {params.tmpDir}"
+
+rule smooveGenotype:
+    input:
+        reference=config["reference"],
+        sites=config["tmpDir"] + "/smoove/{chromosome}/{batch}/{chromosome}.{batch}.sites.vcf.gz",
+        bam=config["tmpDir"] + "/mergeAlignments/{chromosome}/{sample}/{chromosome}.{sample}.bam",
+        bai=config["tmpDir"] + "/mergeAlignments/{chromosome}/{sample}/{chromosome}.{sample}.bam.bai",
+    output:
+        vcf=temp(config["tmpDir"] + "/smoove/{chromosome}/{batch}/{sample}/{chromosome}.{batch}.{sample}-smoove.genotyped.vcf.gz"),
+        csi=temp(config["tmpDir"] + "/smoove/{chromosome}/{batch}/{sample}/{chromosome}.{batch}.{sample}-smoove.genotyped.vcf.gz.csi")
+    wildcard_constraints:
+        batch="[1-9]\d+|[2-9]"  ## Match all batchNums except batch 1. Batch 1 has to be processes by the rule smooveSingle.
+    conda:
+        config["lumpyenv"]
+    # log:
+    #     config["logDir"] + "/smooveGenotype/{chromosome}.{batch}.{sample}.log"
+    threads: 1
+    priority: 99
+    params:
+        outdir=config["tmpDir"] + "/smoove/{chromosome}/{batch}/{sample}",
+        tmpDir=config["tmpDir"] + "/smoove/{chromosome}/{batch}/{sample}/tmp",
+        name="{chromosome}.{batch}.{sample}"
+    shell:
+        "export TMPDIR={params.tmpDir}; mkdir -p {params.tmpDir}; smoove genotype -d -x -p {threads} --name {params.name} --outdir {params.outdir} --fasta {input.reference} --vcf {input.sites} {input.bam}; rm -rf {params.tmpDir}"
+
+rule smoovePaste:
+    input:
+        vcf=lambda wildcards: [config["tmpDir"] + "/smoove/" + wildcards.chromosome  + "/" +  wildcards.batch + "/" + str(s) + "/" + wildcards.chromosome + "." + wildcards.batch  +  "." + str(s) + "-smoove.genotyped.vcf.gz" for s in getSampleNames("S", wildcards.batch)],
+        csi=lambda wildcards: [config["tmpDir"] + "/smoove/" + wildcards.chromosome  + "/" +  wildcards.batch + "/" + str(s) + "/" + wildcards.chromosome + "." + wildcards.batch  +  "." + str(s) + "-smoove.genotyped.vcf.gz.csi" for s in getSampleNames("S", wildcards.batch)]
+    output:
+        protected(config["varOutputDir"] + "/calls/lumpy/{chromosome}.{batch}.lumpy.vcf.gz")
+    wildcard_constraints:
+        batch="[1-9]\d+|[2-9]"   ## Match all batchNums except batch 1. Batch 1 has to be processes by the rule smooveSingle.
+    conda:
+        config["lumpyenv"]
+    # log:
+    #     config["logDir"] + "/smoovePaste/{chromosome}.{batch}.log"
+    threads: 1
+    params:
+        outdir=config["tmpDir"] + "/smoove/{chromosome}/{batch}",
+        tmpDir=config["tmpDir"] + "/smoove/{chromosome}/{batch}/tmp",
+        outfile=config["tmpDir"] + "/smoove/{chromosome}/{batch}/{chromosome}.{batch}.smoove.square.vcf.gz",
+        name="{chromosome}.{batch}"
+    priority: 100
+    shell:
+        "export TMPDIR={params.tmpDir}; mkdir -p {params.tmpDir}; smoove paste --name {params.name} --outdir {params.outdir} {input.vcf} && mv {params.outfile} {output}; rm -rf {params.outdir}"
+
+rule smooveSingle:
+    input:
+        bam=config["tmpDir"] + "/mergeAlignments/{chromosome}/S00001/{chromosome}.S00001.bam",
+        bai=config["tmpDir"] + "/mergeAlignments/{chromosome}/S00001/{chromosome}.S00001.bam.bai",
+        reference=config["reference"],
+        excludeBed=config["lumpyExcludeBed"]
+    output:
+        protected(config["varOutputDir"] + "/calls/lumpy/{chromosome}.{batch}.lumpy.vcf.gz")
+    wildcard_constraints:
+        batch="1"
+    conda:
+        config["lumpyenv"]
+    # log:
+    #     config["logDir"] + "/smooveSingle/{chromosome}.{batch}.log"
+    threads: 1
+    priority: 100
+    params:
+        outdir=config["tmpDir"] + "/smoove/{chromosome}/{batch}",
+        tmpDir=config["tmpDir"] + "/smoove/{chromosome}/{batch}/tmp",
+        outfile=config["tmpDir"] + "/smoove/{chromosome}/{batch}/single.{chromosome}.{batch}-smoove.genotyped.vcf.gz",
+        name="single.{chromosome}.{batch}",
+        excludeChroms=config["lumpyExcludeChroms"]
+    shell:
+        "export TMPDIR={params.tmpDir}; mkdir -p {params.tmpDir}; smoove call -x --outdir {params.outdir} --name {params.name} --fasta {input.reference} --excludechroms {params.excludeChroms} --exclude {input.excludeBed} --processes {threads} --genotype {input.bam} && mv {params.outfile} {output} && rm -rf {params.outdir}"
+
+### Manta ###
+## Note: Manta output is not marked as temp because clean-up of files is taken care of by the rule mantaMove.
+
+rule mantaConfig:
+    input:
+        bam=lambda wildcards: batchToFiles(config["tmpDir"] + "/mergeAlignments", wildcards.batch, wildcards.chromosome, ".bam"),
+        bai=lambda wildcards: batchToFiles(config["tmpDir"] + "/mergeAlignments", wildcards.batch, wildcards.chromosome, ".bam.bai"),
+        reference=config["reference"]
+    output:
+        temp(directory(config["tmpDir"] + "/mantaConfig/{chromosome}/{batch}"))
+    conda:
+        config["mantaenv"]
+    # log:
+    #     config["logDir"] + "/mantaConfig/{chromosome}.{batch}.log"
+    threads: 1
+    priority: 99
+    group: "manta"
+    params:
+        bamline=lambda wildcards: " --bam ".join(batchToFiles(config["tmpDir"] + "/mergeAlignments", wildcards.batch, wildcards.chromosome, ".bam")),
+        outdir=config["tmpDir"] + "/mantaConfig/{chromosome}/{batch}/"
+    shell:
+        "configManta.py --bam {params.bamline} --referenceFasta {input.reference} --runDir {params.outdir}"
+
+rule mantaCall:
+    input:
+        bam=lambda wildcards: batchToFiles(config["tmpDir"] + "/mergeAlignments", wildcards.batch, wildcards.chromosome, ".bam"),
+        bai=lambda wildcards: batchToFiles(config["tmpDir"] + "/mergeAlignments", wildcards.batch, wildcards.chromosome, ".bam.bai"),
+        reference=config["reference"],
+        workdir=rules.mantaConfig.output
+    output:
+        protected(config["varOutputDir"] + "/calls/manta/{chromosome}.{batch}.manta.vcf.gz")
+    conda:
+        config["mantaenv"]
+    params:
+        mantaparams="-m local",
+        cfg=rules.mantaConfig.output[0] + "/runWorkflow.py",
+        results=config["tmpDir"] + "/mantaConfig/{chromosome}/{batch}/results/variants/diploidSV.vcf.gz"
+    threads: 24
+    priority: 100
+    group: "manta"
+    # log:
+    #     config["logDir"] + "/mantaCall{chromosome}.{batch}.log"
+    shell:
+        "{params.cfg} {params.mantaparams} -j {threads} && mv {params.results} {output}"
+
+## The following rules are intended for prioritizing finishing each chromosome before starting another one.
+
+rule prio1:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 0) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 0))
+    threads:1
+    priority: 101
+    shell:
+        "touch {output}"
+
+rule prio2:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 1) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 1))
+    threads:1
+    priority: 102
+    shell:
+        "touch {output}"
+
+rule prio3:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 2) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 2))
+    threads:1
+    priority: 103
+    shell:
+        "touch {output}"
+
+rule prio4:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 3) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 3))
+    threads:1
+    priority: 104
+    shell:
+        "touch {output}"
+
+rule prio5:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 4) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 4))
+    threads:1
+    priority: 105
+    shell:
+        "touch {output}"
+
+rule prio6:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 5) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 5))
+    threads:1
+    priority: 106
+    shell:
+        "touch {output}"
+
+rule prio7:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 6) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 6))
+    threads:1
+    priority: 107
+    shell:
+        "touch {output}"
+
+rule prio8:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 7) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 7))
+    threads:1
+    priority: 108
+    shell:
+        "touch {output}"
+
+rule prio9:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 8) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 8))
+    threads:1
+    priority: 106
+    shell:
+        "touch {output}"
+
+rule prio10:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 9) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 9))
+    threads:1
+    priority: 110
+    shell:
+        "touch {output}"
+
+rule prio11:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 10) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 10))
+    threads:1
+    priority: 111
+    shell:
+        "touch {output}"
+
+rule prio12:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 11) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 11))
+    threads:1
+    priority: 112
+    shell:
+        "touch {output}"
+
+rule prio13:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 12) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 12))
+    threads:1
+    priority: 113
+    shell:
+        "touch {output}"
+
+rule prio14:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 13) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 13))
+    threads:1
+    priority: 114
+    shell:
+        "touch {output}"
+
+rule prio15:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 14) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 14))
+    threads:1
+    priority: 115
+    shell:
+        "touch {output}"
+
+rule prio16:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 15) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 15))
+    threads:1
+    priority: 116
+    shell:
+        "touch {output}"
+
+rule prio17:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 16) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 16))
+    threads:1
+    priority: 117
+    shell:
+        "touch {output}"
+
+rule prio18:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 17) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 17))
+    threads:1
+    priority: 118
+    shell:
+        "touch {output}"
+
+rule prio19:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 18) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 18))
+    threads:1
+    priority: 119
+    shell:
+        "touch {output}"
+
+rule prio20:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 19) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 19))
+    threads:1
+    priority: 120
+    shell:
+        "touch {output}"
+
+rule prio21:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 20) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 20))
+    threads:1
+    priority: 121
+    shell:
+        "touch {output}"
+
+rule prio22:
+    input:
+        lambda wildcards: [config["varOutputDir"] + "/calls/" + tool +"/" + getFinishedChrNum(config["chromosomes"], 21) + "." + str(batch) + "." + tool + "." + assignFileSuffix(tool) for batch in maxNumToBatches(config["maxSamples"]) for tool in config["tools"]]
+    output:
+        temp(config["tmpDir"] + "/finishedChromosomes/"+ getFinishedChrNum(config["chromosomes"], 21))
+    threads:1
+    priority: 122
+    shell:
+        "touch {output}"

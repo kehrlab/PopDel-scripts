@@ -1,0 +1,97 @@
+configfile: "scripts/manta/config.yml"
+
+TIME="/usr/bin/time -f \"%e\\t%U\\t%S\\t%M\" -o "
+
+def getBamLine(dir, samples, refVersion):
+    out = ""
+    for s in samples:
+        out = out + "--bam " + dir + "/" + s + "/" + s + "." + refVersion + ".bam "
+    return out
+
+rule all:
+    input:
+        config["vcf"]
+
+rule manta_config:
+    input:
+        ref = ancient(config["reference"]),
+        bam = expand("{dir}/{sample}/{sample}.{refVersion}.bam", dir=config["bamBase"], sample=config["samples"], refVersion=config["refVersion"])
+    output:
+        temp(config["wd"] + "/all/runWorkflow.py")
+    params:
+        bamline = getBamLine(config["bamBase"], config["samples"], config["refVersion"]),
+        wd = config["wd"] + "/all"
+    conda:
+        config["environment"]
+    threads: 1
+    log:
+        "logs/smoove/all.config.log"
+    shell:
+        TIME + "{log} configManta.py {params.bamline}--referenceFasta {input.ref} --runDir {params.wd}"
+
+rule manta_config_single:
+    input:
+        ref = config["reference"],
+        bam = config["bamBase"] + "/{sample}/{sample}." + config["refVersion"] + ".bam",
+    output:
+        config["wd"] + "/{sample}/runWorkflow.py"
+    params:
+        bamline = "--bam " + config["bamBase"] + "/{sample}/{sample}." + config["refVersion"] + ".bam",
+        wd = config["wd"] + "/{sample}"
+    conda:
+        config["environment"]
+    threads: 1
+    log:
+        "logs/smoove/{sample}.config.log"
+    shell:
+        TIME + "{log} configManta.py {params.bamline} --referenceFasta {input.ref} --runDir {params.wd}"
+
+rule manta_call:
+    input:
+        cfg=config["wd"] + "/runWorkflow.py",
+        bam = expand("{dir}/{sample}/{sample}.{refVersion}.bam", dir=config["bamBase"], sample=config["samples"], refVersion=config["refVersion"]),
+    output:
+        temp(config["wd"] + "/all/results/variants/diploidSV.vcf.gz")
+    conda:
+        config["environment"]
+    params:
+        "-m local"
+    threads: 8
+    log:
+        "logs/manta/all.manta.log"
+    shell:
+        TIME + "{log} {input.cfg} {params} -j {threads}"
+
+rule manta_call_single:
+    input:
+        cfg = config["wd"] + "/{sample}/runWorkflow.py",
+        bam = config["bamBase"] + "/{sample}/{sample}." + config["refVersion"] + ".bam",
+    output:
+        temp(config["wd"] + "/{sample}/results/variants/diploidSV.vcf.gz")
+    conda:
+        config["environment"]
+    params:
+        "-m local"
+    threads: 8
+    log:
+        "logs/manta/{sample}.manta.log"
+    shell:
+        TIME + "{log} {input.cfg} {params} -j {threads}"
+
+rule moveResults:
+    input:
+        config["wd"] + "/all/results/variants/diploidSV.vcf.gz"
+    output:
+        protected("calls/manta/all.manta.GRCh37.vcf.gz")
+    threads: 1
+    shell:
+        "cp {input} {output}"
+
+rule moveSingleResults:
+    input:
+        config["wd"] + "/{sample}/results/variants/diploidSV.vcf.gz"
+    output:
+        protected("calls/manta/{sample}.manta.GRCh37.vcf.gz")
+    threads: 1
+    shell:
+        "cp {input} {output}"

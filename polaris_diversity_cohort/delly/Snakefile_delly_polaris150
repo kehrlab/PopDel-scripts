@@ -1,0 +1,147 @@
+configfile: "scripts/delly/config.yaml"
+
+TIME="/usr/bin/time -f \"%e\\t%U\\t%S\\t%M\" -ao "
+
+rule all:
+    input:
+        "calls/delly/polaris150.delly.bcf"
+
+rule delly_call:
+    input:
+        bam = "ngs_mapping/output/bwa.{sample}-N1-DNA1-WGS1/out/bwa.{sample}-N1-DNA1-WGS1.bam",
+        ref = "static_data/GRCh38/BWA/hs38/hs38.fa"
+    output:
+        bcf = "calls/delly/singleSample/{sample}/{sample}.delly.single.bcf",
+        csi = "calls/delly/singleSample/{sample}/{sample}.delly.single.bcf.csi"
+    log:
+        "logs/delly/call/{sample}/{sample}.delly.call.single.log"
+    conda:
+        "environment.yaml"
+    params:
+        exclude="scripts/delly/human.hg38.noY.excl.tsv"
+    threads: 1
+    shell:
+        TIME + "{log} delly call -n -o {output.bcf} -x {params.exclude} -g {input.ref} {input.bam}"
+
+rule bcftools_filter_DEL:
+    input:
+        "calls/delly/singleSample/{sample}/{sample}.delly.single.bcf"
+    output:
+        "calls/delly/singleSample/{sample}/{sample}.delly.single.DelOnly.bcf"
+    log:
+        "logs/delly/singleSample/{sample}/{sample}.filterDel.bcftools.log"
+    conda:
+        "environment.yaml"
+    threads: 1
+    shell:
+        TIME + "{log} bcftools view -i 'ALT==\"<DEL>\"' -O b -o {output} {input}"
+
+rule delly_merge:
+    input:
+        expand("calls/delly/singleSample/{sample}/{sample}.delly.single.DelOnly.bcf", sample=config["samples"])
+    output:
+        "calls/delly/singleSample/polaris150.delly.sites.bcf"
+    log:
+        "logs/delly/merge/polaris150.merge.delly.log"
+    conda:
+        "environment.yaml"
+    threads: 1
+    shell:
+        TIME + "{log} delly merge -o {output} {input}"
+
+rule delly_genotype:
+    input:
+        bam = "ngs_mapping/output/bwa.{sample}-N1-DNA1-WGS1/out/bwa.{sample}-N1-DNA1-WGS1.bam",
+        ref = "static_data/GRCh38/BWA/hs38/hs38.fa",
+        bcf = "calls/delly/singleSample/polaris150.delly.sites.bcf"
+    output:
+        "calls/delly/singleSample/{sample}/{sample}.delly.all.bcf"
+    log:
+        "logs/delly/genotype/{sample}/{sample}.delly.genotype.log"
+    conda:
+        "environment.yaml"
+    threads: 1
+    shell:
+        TIME + "{log} delly call -n -o {output} -g {input.ref} -v {input.bcf} {input.bam}"
+
+## The following part is a fix for a known bug in delly (https://github.com/dellytools/delly/issues/106) ##
+rule bcftools_filter:
+    input:
+        "calls/delly/singleSample/{sample}/{sample}.delly.all.bcf"
+    output:
+        "calls/delly/singleSample/{sample}/{sample}.delly.all.No0Pos.bcf"
+    log:
+        "logs/delly/singleSample/{sample}/{sample}.delly.all.No0Pos.bcftools.log"
+    conda:
+        "environment.yaml"
+    threads: 1
+    shell:
+        TIME + "{log} bcftools view -e \"POS==0\" -O b -o {output} {input}"
+
+rule bcftools_sort:
+    input:
+        "calls/delly/singleSample/{sample}/{sample}.delly.all.No0Pos.bcf"
+    output:
+        "calls/delly/singleSample/{sample}/{sample}.delly.all.sorted.bcf"
+    log:
+        "logs/delly/bcftools_sort/{sample}/{sample}.sort.bcftools.log"
+    conda:
+        "environment.yaml"
+    threads: 1
+    shell:
+        TIME + "{log} bcftools sort -O b -o {output} {input}"
+
+rule bcftools_index:
+    input:
+        "calls/delly/singleSample/{sample}/{sample}.delly.all.sorted.bcf"
+    output:
+        "calls/delly/singleSample/{sample}/{sample}.delly.all.sorted.bcf.csi"
+    log:
+        "logs/delly/bcftools_index/{sample}/{sample}.index.bcftools.log"
+    conda:
+        "environment.yaml"
+    threads: 1
+    shell:
+        TIME + "{log} bcftools index {input}"
+## End of the fix ##
+
+rule bcftools_merge:
+    input:
+        bcf = expand("calls/delly/singleSample/{sample}/{sample}.delly.all.sorted.bcf", sample=config["samples"]),
+        csi = expand("calls/delly/singleSample/{sample}/{sample}.delly.all.sorted.bcf.csi", sample=config["samples"])
+    output:
+        "calls/delly/singleSample/polaris150.delly.merged.bcf"
+    log:
+        "logs/delly/bcftools_merge/polaris150.merge.bcftools.log"
+    conda:
+        "environment.yaml"
+    threads: 1
+    shell:
+        TIME + "{log} bcftools merge -m id -O b -o {output} {input.bcf}"
+
+rule bcftools_index2:
+    input:
+        "calls/delly/singleSample/polaris150.delly.merged.bcf"
+    output:
+        "calls/delly/singleSample/polaris150.delly.merged.bcf.csi"
+    log:
+        "logs/delly/bcftools_index/merged.index.bcftools.log"
+    conda:
+        "environment.yaml"
+    threads: 1
+    shell:
+        TIME + "{log} bcftools index {input}"
+
+rule germline_filter:
+    input:
+        bcf="calls/delly/singleSample/polaris150.delly.merged.bcf",
+        csi="calls/delly/singleSample/polaris150.delly.merged.bcf.csi"
+    output:
+        "calls/delly/polaris150.delly.bcf"
+    log:
+        "logs/delly/filter/polaris150.filter.delly.log"
+    conda:
+        "environment.yaml"
+    threads: 1
+    shell:
+        TIME + "{log} delly filter -f germline -o {output} {input.bcf}"

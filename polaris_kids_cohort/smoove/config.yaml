@@ -1,0 +1,165 @@
+projectName:
+   polaris_kids
+environment:
+   scripts/smoove/smoove.env
+referenceGenome:
+   data/GRCh38/BWA/hs38/hs38.fa
+bamPath:
+   data/ngs_mapping/output/
+exclude:
+   scripts/smoove/exclude.cnvnator_100bp.GRCh38.20170403.bed
+workdir:
+  tmp/smoove/polarisKids
+vcf:
+   calls/smoove/polaris_kids.smoove.vcf.gz
+logDir:
+   logs/smoove/
+
+samples:
+    - HG03522
+    - HG02975
+    - HG03101
+    - HG03122
+    - HG03131
+    - HG03302
+    - HG03308
+    - HG03041
+    - HG02563
+    - HG02622
+    - HG02723
+    - HG02770
+    - HG02773
+    - HG02853
+    - HG02984
+    - HG03098
+    - HG03065
+    - HG03453
+    - HG03486
+    - HG03576
+    - HG03579
+    - HG03584
+    - HG00450
+    - HG00585
+    - HG00597
+    - HG00612
+    - HG00615
+    - HG00652
+    - HG00658
+    - HG00664
+    - HG00685
+    - HG02015
+    - HG02068
+    - HG02071
+    - HG02074
+    - HG02129
+    - HG02514
+    - HG02523
+    - HG02526
+    - HG01629
+    - HG01627
+    - HG01622
+    - HG01621
+    - HG01683
+    - HG01687
+    - HG01706
+    - HG01755
+    - HG01763
+    - HG01772
+    - HG01770
+    - HG02620
+    - HG02076
+    - HG01771
+    - HG02522
+    - HG01625
+    - HG03574
+    - HG03120
+    - HG03129
+    - HG03582
+    - HG00596
+    - HG02016
+    - HG02073
+    - HG01756
+    - HG03578
+    - HG02562
+    - HG00650
+    - HG02131
+    - HG02974
+    - HG03451
+    - HG03100
+    - HG00684
+    - HG02521
+    - HG01757
+    - HG00611
+    - HG02130
+    - HG00656
+    - HG03121
+    - HG02982
+    - HG00683
+    - HG01761
+    - HG03096
+    - HG03583
+    - HG03306
+    - HG02851
+    - HG00449
+    - HG00610
+    - HG01623
+    - HG02072
+    - HG02525
+    - HG02771
+    - HG03063
+    - HG03064
+    - HG03097
+    - HG03452
+    - HG00614
+    - HG03039
+    - HG02721
+    - HG00448
+    - HG01630
+    - HG02513
+    - HG01707
+    - HG03130
+    - HG02075
+    - HG02017
+    - HG01682
+    - HG02772
+    - HG00662
+    - HG03040
+    - HG02621
+    - HG02069
+    - HG00613
+    - HG01626
+    - HG03301
+    - HG01624
+    - HG00663
+    - HG02768
+    - HG03099
+    - HG03577
+    - HG02852
+    - HG02524
+    - HG02512
+    - HG03307
+    - HG03575
+    - HG01628
+    - HG01684
+    - HG00584
+    - HG01686
+    - HG02973
+    - HG02722
+    - HG01620
+    - HG01708
+    - HG00595
+    - HG02769
+    - HG02983
+    - HG01685
+    - HG03300
+    - HG03485
+    - HG00657
+    - HG01762
+    - HG02561
+    - HG03521
+    - HG00651
+    - HG02070
+    - HG03520
+    - HG01619
+    - HG00583
+    - HG03484

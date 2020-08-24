@@ -1,0 +1,75 @@
+### Directories and reference path ###
+chromDir:
+  data/reference/hs37d5/Chromosomes
+reference:
+  data/reference/hs37d5/BWA_index/genome.fa
+g1kSVset:
+  scripts/additionalFiles/G1k_callsets/ALL.wgs.mergedSV.v8.20130502.svs.genotypes.vcf.gz
+varOutputDir:
+  WG_G1k_simulation
+logDir:
+  logs
+tmpDir:
+  tmp/wg_deletion_simulation
+
+### Which variant callers do you want to run?
+tools:
+  - popdel
+  - delly
+  - manta
+  - lumpy
+
+### Paths to conda environments ###
+dellyenv:
+  scripts/environments/delly.environment.yml
+lumpyenv:
+  scripts/environments/smoove.environment.yml
+mantaenv:
+  scripts/environments/manta.environment.yml
+
+### Paths to scripts and binaries ###
+illuminaArtBin:
+  art_illumina
+simulateDeletions:
+  scripts/simulate_deletions.py
+simpy:
+  scripts/simulate_deletion_haplotype.py
+toVcf:
+  scripts/simulation2vcf.py
+popdelBin:
+  popdel
+
+### Options for Illumina ART read simulation ###
+sequencingSystem:
+  HS25
+foldCoverage:
+  15
+readLength:
+  150
+meanFragmentSize:
+  300
+fragSizeSD:
+  50
+
+### Options for Delly ###
+dellyFlags:
+  "-n"
+
+### Options for Lumpy/Smoove
+lumpyExcludeChroms:
+  "'chrX,chrY,chrM,chrEBV,~.*_.*'"
+lumpyExcludeBed:
+  scripts/additionalFiles/smoove.exclude.grch37.bed
+
+### General simulation settings ###
+
+maxSamples:
+  500
+
+chromosomes: ## Only use chromsomes with numbers in them, otherwise generateDeletions will mess up the random seed.
+  - chr17
+  - chr18
+  - chr19
+  - chr20
+  - chr21
+  - chr22

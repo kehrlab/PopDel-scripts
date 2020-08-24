@@ -1,0 +1,105 @@
+configfile: "scripts/smoove/config.yaml"
+
+PROJECTNAME=config["projectName"]
+ENVFILE=config["environment"]
+BAMPATH=config["bamPath"]
+VCFOUT=config["vcf"]
+WORKPATH=config["workdir"]
+LOGDIR=config["logDir"]
+TIME="/usr/bin/time -f \"%e\\t%U\\t%S\\t%M\" -ao "
+
+def getSingleSampleVCFs(samples, workpath):
+    vcfs = []
+    for s in samples:
+        vcf = s + "-smoove.genotyped.vcf.gz"
+        vcfs.append(workpath + "/" + vcf)
+    return vcfs
+
+def getMultiSampleVCFs(samples, workpath):
+    vcfs = []
+    for s in samples:
+        vcf = s + "-smoove.genotyped.vcf.gz"
+        vcfs.append(workpath + "/genotyped/" + vcf)
+    return vcfs
+
+rule all:
+    input:
+        VCFOUT
+
+rule smoove_call:
+    input:
+        ref=config["referenceGenome"],
+        exclude=config["exclude"],
+        bam=BAMPATH + "bwa.{sample}-N1-DNA1-WGS1/out/bwa.{sample}-N1-DNA1-WGS1.bam"
+    output:
+        temp(WORKPATH + "/{sample}-smoove.genotyped.vcf.gz")
+    conda:
+        ENVFILE
+    log:
+        LOGDIR + "smooveCall/{sample}/smoove_call.{sample}.log"
+    threads: 1
+    params:
+        outdir=WORKPATH,
+        name="{sample}"
+    shell:
+        TIME + "{log} smoove call --outdir {params.outdir} --exclude {input.exclude} --name {params.name} --fasta {input.ref} -p {threads} --genotype {input.bam}"
+
+rule smoove_merge:
+    input:
+        ref=config["referenceGenome"],
+        vcfs=getSingleSampleVCFs(config["samples"], WORKPATH)
+    output:
+        temp(WORKPATH + "/merged.sites.vcf.gz")
+    conda:
+        ENVFILE
+    log:
+        LOGDIR + "smooveMerge/smoove_merge.log"
+    threads: 1
+    params:
+        outdir=WORKPATH,
+        name="merged"
+    shell:
+        TIME + "{log} smoove merge --name {params.name} -f {input.ref} --outdir {params.outdir} {input.vcfs}"
+
+rule smoove_genotype:
+    input:
+        ref=config["referenceGenome"],
+        sites=WORKPATH + "/merged.sites.vcf.gz",
+        bam=BAMPATH + "bwa.{sample}-N1-DNA1-WGS1/out/bwa.{sample}-N1-DNA1-WGS1.bam"
+    output:
+        temp(WORKPATH + "/genotyped/{sample}-smoove.genotyped.vcf.gz")
+    conda:
+      ENVFILE
+    log:
+        LOGDIR + "smooveGenotype/{sample}/smoove_genotype.{sample}.log"
+    threads: 1
+    params:
+        outdir=WORKPATH + "/genotyped",
+        name="{sample}"
+    shell:
+        TIME + "{log} smoove genotype -d -x -p {threads} --name {params.name} --outdir {params.outdir} --fasta {input.ref} --vcf {input.sites} {input.bam}"
+
+rule smoove_paste:
+    input:
+        getMultiSampleVCFs(config["samples"], WORKPATH)
+    output:
+        temp(WORKPATH + "/polaris150.smoove.square.vcf.gz")
+    conda:
+         ENVFILE
+    log:
+        LOGDIR + "smoovePaste/smoove_paste.log"
+    threads: 1
+    params:
+        outdir=WORKPATH,
+        name="polaris150"
+    shell:
+        TIME + "{log} smoove paste --name {params.name} --outdir {params.outdir} {input}"
+
+rule move_results:
+    input:
+        WORKPATH + "/polaris150.smoove.square.vcf.gz"
+    output:
+        protected(VCFOUT)
+    threads: 1
+    shell:
+        "cp {input} {output}"

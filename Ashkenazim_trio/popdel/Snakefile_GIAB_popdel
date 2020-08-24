@@ -1,0 +1,80 @@
+configfile: "scripts/popdel/config.yml"
+
+TIME="/usr/bin/time -f \"%e\\t%U\\t%S\\t%M\" -o "
+
+def getMergeChroms(path, sample, chroms):
+    return expand("{dir}/{smpl}.{chr}.popdel.vcf", dir=path, smpl=sample, chr=chroms)
+
+rule all:
+    input:
+        expand("calls/popdel/{sample}.popdel.{refVersion}.vcf", sample="HG002", refVersion=config["refVersion"]),
+        "calls/popdel/all.popdel." + config["refVersion"] + ".vcf"
+
+rule popdel_profile:
+    input:
+        bam=config["bamBase"] + "/{sample}/{sample}." + config["refVersion"] + ".bam",
+        samplingRegions=config["samplingRegions"]
+    output:
+        profile="profiles/{sample}." + config["refVersion"] + ".profile",
+        profileList="scripts/popdel/{sample}." + config["refVersion"] + ".profiles"
+    log:
+        "logs/popdel/profile/{sample}.profile." + config["refVersion"] + ".log"
+    threads: 4
+    params:
+        merge="-mrg",
+        regions=config["chromosomes"]
+    shell:
+        TIME + "{log} popdel profile {input.bam} -i {input.samplingRegions} {params.merge} -o {output.profile} {params.regions}; echo \"{output.profile}\" > {output.profileList}"
+
+rule realpath:
+    input:
+        profile=expand("profiles/{sample}.{refVersion}.profile", sample=config["samples"], refVersion=config["refVersion"])
+    output:
+        "scripts/popdel/all." + config["refVersion"] + ".profiles"
+    threads: 1
+    shell:
+        "realpath {input} > {output}"
+
+rule popdel_call:
+    input:
+        profile="profiles/{sample}." + config["refVersion"] + ".profile",
+        profileList="scripts/popdel/{sample}." + config["refVersion"] + ".profiles",
+        mCov=config["coverages"]
+    output:
+        temp(config["tmp"] + "/{sample}.{chromosome}.popdel." + config["refVersion"] + ".vcf")
+    log:
+        "logs/popdel/call/{sample}.{chromosome}." + config["refVersion"] + ".log"
+    threads: 1
+    shell:
+        TIME + "{log} popdel call {input.profileList} -r {wildcards.chromosome} -A {input.mCov} -o {output}"
+
+rule popdel_joint_call:
+    input:
+        profile=expand("profiles/{sample}.{refVersion}.profile", sample=config["samples"], refVersion=config["refVersion"]),
+        profileList="scripts/popdel/all." + config["refVersion"] + ".profiles",
+        mCov=config["coverages"]
+    output:
+        temp(config["tmp"] + "/all.{chromosome}.popdel." + config["refVersion"] + ".vcf")
+    log:
+        "logs/popdel/call/all.{chromosome}." + config["refVersion"] + ".log"
+    threads: 1
+    shell:
+        TIME + "{log} popdel call {input.profileList} -r {wildcards.chromosome} -A {input.mCov} -o {output}"
+
+rule merge:
+    input:
+        expand("{dir}/{{sample}}.{chromosome}.popdel.{refVersion}.vcf", dir=config["tmp"], chromosome=config["chromosomes"], refVersion=config["refVersion"])
+    output:
+        "calls/popdel/{sample}.popdel." + config["refVersion"] + ".vcf"
+    threads: 1
+    shell:          ## Warning: This number varies based on the number of header lines. This depends on the reference genome!
+        "awk 'FNR<=110 && NR>110{{next;}}{{print}}' {input} > {output}"
+
+rule merge_joint:
+    input:
+        expand("{dir}/all.{chromosome}.popdel.{refVersion}.vcf", dir=config["tmp"], chromosome=config["chromosomes"], refVersion=config["refVersion"])
+    output:
+        "calls/popdel/all.popdel." + config["refVersion"] + ".vcf"
+    threads: 1
+    shell:              ## Warning: This number varies based on the number of header lines. This depends on the reference genome!
+        "awk 'FNR<=110 && NR>110{{next;}}{{print}}' {input} > {output}"

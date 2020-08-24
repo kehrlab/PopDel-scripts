@@ -31,7 +31,7 @@ rule merge:
         "calls/popdel/platinum.popdel.vcf"
     threads: 1
     shell:
-        "awk 'FNR<=221 && NR>221{{next;}}{{print}}' {input.chr1} {input.chr10} {input.chr11} {input.chr12} {input.chr13} {input.chr14} {input.chr15} {input.chr16} {input.chr17} {input.chr18} {input.chr19} {input.chr2} {input.chr20} {input.chr21} {input.chr22} {input.chr3} {input.chr4} {input.chr5} {input.chr6} {input.chr7} {input.chr8} {input.chr9} {input.chrX} > {output}"
+        "awk 'FNR<=219 && NR>219{{next;}}{{print}}' {input.chr1} {input.chr10} {input.chr11} {input.chr12} {input.chr13} {input.chr14} {input.chr15} {input.chr16} {input.chr17} {input.chr18} {input.chr19} {input.chr2} {input.chr20} {input.chr21} {input.chr22} {input.chr3} {input.chr4} {input.chr5} {input.chr6} {input.chr7} {input.chr8} {input.chr9} {input.chrX} > {output}"
 
 rule chr1:
     input:
@@ -42,7 +42,7 @@ rule chr1:
         "logs/popdel/call/platinum_call.chr1.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr1 -o {output}) >{log}"
+      popdel call {input} -r chr1 -o {output}) >{log}"
 
 rule chr2:
     input:
@@ -53,7 +53,7 @@ rule chr2:
         "logs/popdel/call/platinum_call.chr2.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr2 -o {output}) >{log}"
+      popdel call {input} -r chr2 -o {output}) >{log}"
 
 rule chr3:
     input:
@@ -64,7 +64,7 @@ rule chr3:
         "logs/popdel/call/platinum_call.chr3.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr3 -o {output}) >{log}"
+      popdel call {input} -r chr3 -o {output}) >{log}"
 
 rule chr4:
     input:
@@ -75,7 +75,7 @@ rule chr4:
         "logs/popdel/call/platinum_call.chr4.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr4 -o {output}) >{log}"
+      popdel call {input} -r chr4 -o {output}) >{log}"
 
 rule chr5:
     input:
@@ -86,7 +86,7 @@ rule chr5:
         "logs/popdel/call/platinum_call.chr5.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr5 -o {output}) >{log}"
+      popdel call {input} -r chr5 -o {output}) >{log}"
 
 rule chr6:
     input:
@@ -97,7 +97,7 @@ rule chr6:
         "logs/popdel/call/platinum_call.chr6.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr6 -o {output}) >{log}"
+      popdel call {input} -r chr6 -o {output}) >{log}"
 
 rule chr7:
     input:
@@ -108,7 +108,7 @@ rule chr7:
         "logs/popdel/call/platinum_call.chr7.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr7 -o {output}) >{log}"
+      popdel call {input} -r chr7 -o {output}) >{log}"
 
 rule chr8:
     input:
@@ -119,7 +119,7 @@ rule chr8:
         "logs/popdel/call/platinum_call.chr8.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr8 -o {output}) >{log}"
+      popdel call {input} -r chr8 -o {output}) >{log}"
 
 rule chr9:
     input:
@@ -130,7 +130,7 @@ rule chr9:
         "logs/popdel/call/platinum_call.chr9.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr9 -o {output}) >{log}"
+      popdel call {input} -r chr9 -o {output}) >{log}"
 
 rule chr10:
     input:
@@ -141,7 +141,7 @@ rule chr10:
         "logs/popdel/call/platinum_call.chr10.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr10 -o {output}) >{log}"
+      popdel call {input} -r chr10 -o {output}) >{log}"
 
 rule chr11:
     input:
@@ -152,7 +152,7 @@ rule chr11:
         "logs/popdel/call/platinum_call.chr11.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr11 -o {output}) >{log}"
+      popdel call {input} -r chr11 -o {output}) >{log}"
 
 rule chr12:
     input:
@@ -163,7 +163,7 @@ rule chr12:
         "logs/popdel/call/platinum_call.chr12.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr12 -o {output}) >{log}"
+      popdel call {input} -r chr12 -o {output}) >{log}"
 
 rule chr13:
     input:
@@ -174,7 +174,7 @@ rule chr13:
         "logs/popdel/call/platinum_call.chr13.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr13 -o {output}) >{log}"
+      popdel call {input} -r chr13 -o {output}) >{log}"
 
 rule chr14:
     input:
@@ -185,7 +185,7 @@ rule chr14:
         "logs/popdel/call/platinum_call.chr14.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr14 -o {output}) >{log}"
+      popdel call {input} -r chr14 -o {output}) >{log}"
 
 rule chr15:
     input:
@@ -196,7 +196,7 @@ rule chr15:
         "logs/popdel/call/platinum_call.chr15.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr15 -o {output}) >{log}"
+      popdel call {input} -r chr15 -o {output}) >{log}"
 
 rule chr16:
     input:
@@ -207,7 +207,7 @@ rule chr16:
         "logs/popdel/call/platinum_call.chr16.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr16 -o {output}) >{log}"
+      popdel call {input} -r chr16 -o {output}) >{log}"
 
 rule chr17:
     input:
@@ -218,7 +218,7 @@ rule chr17:
         "logs/popdel/call/platinum_call.chr17.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr17 -o {output}) >{log}"
+      popdel call {input} -r chr17 -o {output}) >{log}"
 
 rule chr18:
     input:
@@ -229,7 +229,7 @@ rule chr18:
         "logs/popdel/call/platinum_call.chr18.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr18 -o {output}) >{log}"
+      popdel call {input} -r chr18 -o {output}) >{log}"
 
 rule chr19:
     input:
@@ -240,7 +240,7 @@ rule chr19:
         "logs/popdel/call/platinum_call.chr19.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr19 -o {output}) >{log}"
+      popdel call {input} -r chr19 -o {output}) >{log}"
 
 rule chr20:
     input:
@@ -251,7 +251,7 @@ rule chr20:
         "logs/popdel/call/platinum_call.chr20.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr20 -o {output}) >{log}"
+      popdel call {input} -r chr20 -o {output}) >{log}"
 
 rule chr21:
     input:
@@ -262,7 +262,7 @@ rule chr21:
         "logs/popdel/call/platinum_call.chr21.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr21 -o {output}) >{log}"
+      popdel call {input} -r chr21 -o {output}) >{log}"
 
 rule chr22:
     input:
@@ -273,7 +273,7 @@ rule chr22:
         "logs/popdel/call/platinum_call.chr22.log"
     threads: 1
     shell:
-      "(popdel call {input} -r chr22 -o {output}) >{log}"
+      popdel call {input} -r chr22 -o {output}) >{log}"
 
 rule chrX:
     input:
@@ -284,4 +284,4 @@ rule chrX:
         "logs/popdel/call/platinum_call.chrX.log"
     threads: 1
     shell:
-        "(popdel call {input} -r chrX -o {output}) >{log}"
+        popdel call {input} -r chrX -o {output}) >{log}"

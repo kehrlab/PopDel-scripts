@@ -1,0 +1,41 @@
+configfile: "scripts/delly/config.yml"
+
+TIME="/usr/bin/time -f \"%e\\t%U\\t%S\\t%M\" -o "
+
+rule all:
+    input:
+        config["bcf"]
+
+rule delly_call:
+    input:
+        ref = config["reference"],
+        bam = expand("{dir}/{sample}/{sample}.{refVersion}.bam", dir=config["bamBase"], sample=config["samples"], refVersion=config["refVersion"]),
+        ex = config["exclude"]
+    output:
+        bcf = "calls/delly/all.delly." + config["refVersion"] + ".bcf",
+        csi = expand("{file}.csi", file=config["bcf"])
+    log:
+        "logs/delly/delly.call.log"
+    conda:
+        config["environment"]
+    params:
+        "-n"
+    shell:
+        TIME + "{log} delly call {params} -x {input.ex} -o {output.bcf} -g {input.ref} {input.bam}"
+
+rule delly_call_single:
+    input:
+        ref = config["reference"],
+        bam = config["bamBase"] + "/{sample}/{sample}." + config["refVersion"] + ".bam",
+        ex = config["exclude"]
+    output:
+        bcf = "calls/delly/{sample}.delly.GRCh37.bcf",
+        csi = "calls/delly/{sample}.delly.GRCh37.bcf.csi",
+    log:
+        "logs/delly/{sample}.delly.call.log"
+    conda:
+        config["environment"]
+    params:
+        "-n"
+    shell:
+        TIME + "{log} delly call {params} -x {input.ex} -o {output.bcf} -g {input.ref} {input.bam}"

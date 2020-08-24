@@ -1,0 +1,64 @@
+configfile: "scripts/smoove/config.yml"
+
+TIME="/usr/bin/time -f \"%e\\t%U\\t%S\\t%M\" -o "
+
+rule all:
+    input:
+        "calls/smoove/HG002.smoove."+ config["refVersion"] +".vcf.gz",
+    ##    "calls/smoove/all.smoove."+ config["refVersion"] +".vcf.gz"
+
+rule smoove_call_giab:
+    input:
+        ref = config["reference"],
+        bam = expand("{dir}/{sample}/{sample}.{refVersion}.bam", dir=config["bamBase"], sample=config["samples"], refVersion=config["refVersion"])
+    output:
+        temp(config["tmp"] + "/" + config["project"] + "-smoove.genotyped.vcf.gz")
+    params:
+        project = config["project"],
+        tmp = config["tmp"],
+        excludeC = config["excludeChroms"],
+        excludeR = config["excludeRegions"]
+    log:
+        "logs/smoove/all.smoove." + config["refVersion"] + ".log"
+    conda:
+        "smoove.env"
+    threads:
+        1
+    shell:
+        TIME + "{log} smoove call -x --outdir {params.tmp} --name {params.project} --exclude {params.excludeR} --excludechroms {params.excludeC} --fasta {input.ref} -p {threads} --genotype {input.bam}"
+
+rule smoove_call_single:
+    input:
+        ref = config["reference"],
+        bam = config["bamBase"] + "/{sample}/{sample}." + config["refVersion"] + ".bam"
+    output:
+        temp(config["tmp"] + "/" + config["project"] + ".{sample}-smoove.genotyped.vcf.gz")
+    params:
+        project = config["project"] + ".{sample}",
+        tmp = config["tmp"],
+        excludeC = config["excludeChroms"],
+        excludeR = config["excludeRegions"]
+    log:
+        "logs/smoove/{sample}.smoove." + config["refVersion"] + ".log"
+    conda:
+        "smoove.env"
+    threads:
+        1
+    shell:
+        TIME + "{log} smoove call -x --outdir {params.tmp} --name {params.project} --exclude {params.excludeR} --excludechroms {params.excludeC} --fasta {input.ref} -p {threads} --genotype {input.bam}"
+
+rule moveResults:
+    input:
+        config["tmp"] + "/" + config["project"] + "-smoove.genotyped.vcf.gz"
+    output:
+        protected("calls/smoove/all.smoove." + config["refVersion"] + ".vcf.gz")
+    shell:
+        "cp {input} {output}"
+
+rule moveSingleResults:
+    input:
+        config["tmp"] + "/" + config["project"] + ".{sample}-smoove.genotyped.vcf.gz"
+    output:
+        protected("calls/smoove/{sample}.smoove." + config["refVersion"] + ".vcf.gz")
+    shell:
+        "cp {input} {output}"

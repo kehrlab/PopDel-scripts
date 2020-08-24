@@ -1,4 +1,5 @@
-configfile: "config.yaml"
+configfile: "scripts/popdelProfile/config.yaml"
+TIME="/usr/bin/time -f \"%e\\t%U\\t%S\\t%M\" -ao "
 
 rule all:
     input:
@@ -6,10 +7,10 @@ rule all:
 
 rule profile:
     input:
-        "bam/bwa.{sample}-N1-DNA1-WGS1.bam"
+        "baml/bwa.{sample}-N1-DNA1-WGS1.bam"
     output:
         "profiles/{sample}.profile"
     log:
         "logs/popdel/profile/{sample}_profile.log"
     shell:
-        "(popdel profile -o {output} {input}) 2> {log}"
+        TIME + "{log} popdel profile -o {output} {input} chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY"

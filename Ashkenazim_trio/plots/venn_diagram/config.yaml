@@ -1,0 +1,23 @@
+left:
+  500     ## Calls below this size will be excluded
+
+right:
+  10000   ## Calls above this size will be excluded
+
+overlap:
+  0.5
+
+truth:
+   scripts/bedtools/truth/HG002_SVs_Tier1_v0.6.vcf.gz
+
+vcfs: ## Paths to the vcf files.
+   popdel: calls/popdel/HG002_joint.popdel.HQ.DelOnly.GRCh37.vcf
+   delly: calls/delly/HG002_joint.delly.HQ.DelOnly.GRCh37.vcf
+   smoove: calls/smoove/HG002_joint.smoove.HQ.DelOnly.GRCh37.vcf
+   manta: calls/manta/HG002_joint.manta.HQ.DelOnly.GRCh37.vcf
+
+highConfRegions:
+   scripts/bedtools/truth/HG002_SVs_Tier1_v0.6.bed
+
+outpath:
+   eval

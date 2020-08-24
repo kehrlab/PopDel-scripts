@@ -1,0 +1,18 @@
+project:
+   GIAB
+refVersion:
+   GRCh37
+reference:
+   data/GIAB/Ashkenazim_trio_HiSeq2500/reflinks/hs37d5.fa
+excludeChroms:
+     "X,Y,MT,EBV,~.*_.*"
+excludeRegions:
+   scripts/smoove/ceph18.b37.lumpy.exclude.2014-01-15.bed
+tmp:
+   tmp/smoove/GIAB
+bamBase:
+   data/GIAB/Ashkenazim_trio_HiSeq2500/bam
+samples:
+   - HG002
+   - HG003
+   - HG004

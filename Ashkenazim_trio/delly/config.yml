@@ -1,0 +1,17 @@
+bcf:
+   - calls/delly/all.delly.GRCh37.bcf
+   - calls/delly/HG002.delly.GRCh37.bcf
+environment:
+   delly.environment.yml
+refVersion:
+   GRCh37
+reference:
+   data/GIAB/Ashkenazim_trio_HiSeq2500/reflinks/hs37d5.fa
+bamBase:
+   data/GIAB/Ashkenazim_trio_HiSeq2500/bam
+exclude:
+   scripts/delly/human.hg19.excl.tsv
+samples:
+   - HG002
+   - HG003
+   - HG004

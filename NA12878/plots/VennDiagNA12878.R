@@ -1,35 +1,25 @@
 library(VennDiagram)
 
-t <- read.table("calls/bed/counts.personalis.500-10000_noCentromeres.0.5.rigorous.tsv")     ##select one
-#t <- read.table("calls/bed/counts.personalis.500-10000_noCentromeres.0.8.rigorous.tsv")
-#t <- read.table("calls/bed/counts.personalis.500-10000_noCentromeres.0.001.rigorous.tsv")
-#t <- read.table("calls/bed/counts.pacbio.500-10000_noCentromeres.0.5.rigorous.tsv")
-#t <- read.table("calls/bed/counts.pacbio.500-10000_noCentromeres.0.8.rigorous.tsv")
-#t <- read.table("calls/bed/counts.pacbio.500-10000_noCentromeres.0.001.rigorous.tsv")
+#t <- read.table("eval/counts.personalis.500-10000.0.5.tsv")     ##select one
+t <- read.table("eval/counts.pacbio.500-10000.0.5.tsv")     ##select one
+
 
 c <- as.data.frame(t(t$V1))
 names(c) <- t$V2
 rm(t)
 
-tname <- "PacBio"
+#tname <- "Illumina"  ##Adapt according to the reference set
+tname <- "PacBio"  ##Adapt according to the reference set
 
-names <- c(tname, "PopDel", "Delly", "Lumpy")
-cols <- rainbow(4)
+truthcol <- "blue"
+pdcol <- "red"
+dellycol <- "green" 
+smoovecol <- "yellow"
 
 par(mar = rep(0.1, 4), mfrow=c(1,1))
 plot.new()
-draw.pairwise.venn(c$truth, c$popdel, c$truth_popdel, category = c(tname, "PopDel"), fill = cols[1:2],
-                   alpha = 0.25, euler.d=TRUE, scaled=TRUE)
+draw.triple.venn(c$truth, c$popdel, c$delly, c$truth_popdel, c$popdel_delly, c$truth_delly, c$truth_popdel_delly, fill = c(truthcol, pdcol, dellycol), c(tname, "PopDel", "Delly"))
 plot.new()
-draw.pairwise.venn(c$truth, c$delly, c$truth_delly, category = c(tname, "Delly"), fill = c(cols[1], cols[3]),
-                   alpha = 0.25, euler.d=TRUE, scaled=TRUE)
-par(mar = rep(0.5, 4))
+draw.triple.venn(c$truth, c$popdel, c$smoove, c$truth_popdel, c$popdel_smoove, c$truth_smoove, c$truth_popdel_smoove, fill = c(truthcol, pdcol, smoovecol), c(tname, "PopDel", "smoove"))
 plot.new()
-draw.pairwise.venn(c$truth, c$lumpy, c$truth_lumpy, category = c(tname, "Lumpy"), fill = c(cols[1], cols[4]),
-                   alpha = 0.25, euler.d=TRUE, scaled=TRUE)
-
-plot.new()
-draw.quad.venn(c$truth, c$popdel, c$delly, c$lumpy, c$truth_popdel, c$truth_delly, c$truth_lumpy, c$popdel_delly,
-               c$popdel_lumpy, c$delly_lumpy, c$truth_popdel_delly, c$truth_popdel_lumpy, c$truth_delly_lumpy, 
-               c$popdel_delly_lumpy, c$truth_popdel_delly_lumpy, category = names, fill = cols, alpha = 0.3,
-               euler.d=TRUE, scaled=TRUE)
+draw.triple.venn(c$truth, c$popdel, c$manta, c$truth_popdel, c$popdel_manta, c$truth_manta, c$truth_popdel_manta, fill = c(truthcol, pdcol, mantacol), c(tname, "PopDel", "Manta"))

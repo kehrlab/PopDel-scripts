@@ -1,15 +1,18 @@
+configfile: "scripts/delly/config.yaml"
+
 rule all:
     input:
-        "calls/delly/platinum.delly.bcf"
+        config["outCalls"]
 
 rule delly_call_platinum:
     input:
         ref = "reference/hs38.fa",
-        bam = "bam/NA12878_illu_platinum_GRCh38.bam"
+        bam = "bam/NA12878_illu_platinum_GRCh38.CUBI.bam",
+        ex = "human.hg38.excl.tsv"
     output:
-        bcf = "calls/delly/platinum.delly.bcf",
-        csi = "calls/delly/platinum.delly.bcf.csi"
+        bcf = config["outCalls"],
+        csi = expand("{file}.csi", file=config["outCalls"])
     conda:
         "delly.environment.yml"
     shell:
-        "delly call -o {output.bcf} -g {input.ref} {input.bam}"
+        "delly call -n -x {input.ex} -o {output.bcf} -g {input.ref} {input.bam}"
