@@ -1,8 +1,9 @@
 # PopDel-scripts
 Collection of scripts used for the paper
 Sebastian Niehus, Hákon Jónsson, Eythór Björnsson, Doruk Beyter, Hannes P. Eggertsson, Patrick Sulem, Kári Stefánsson, Bjarni V. Halldórsson, Birte Kehr.
-*PopDel identifies medium-size deletions jointly in tens of thousands of genomes*.
-Preprint available at bioRxiv 740225; doi: https://doi.org/10.1101/740225
+*PopDel identifies medium-size deletions jointly in tens of thousands of genomes*.  
+Preprint available at bioRxiv 740225; DOI: https://doi.org/10.1101/740225.  
+All generated output VCF/BCF files are published at Zenodo; DOI: https://doi.org/10.5281/zenodo.3992607
 
 **Content**
 
