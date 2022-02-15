@@ -2,7 +2,7 @@
 Collection of scripts used for the paper
 Sebastian Niehus, Hákon Jónsson, Janina Schönberger, Eythór Björnsson, Doruk Beyter, Hannes P. Eggertsson, Patrick Sulem, Kári Stefánsson, Bjarni V. Halldórsson, Birte Kehr.
 *PopDel identifies medium-size deletions jointly in tens of thousands of genomes*.  
-Available at Nature Communications: https://www.nature.com/articles/s41467-020-20850-5
+Available at Nature Communications: https://www.nature.com/articles/s41467-020-20850-5  
 All generated output VCF/BCF files are published at Zenodo; DOI: https://doi.org/10.5281/zenodo.3992607
 
 **Content**
