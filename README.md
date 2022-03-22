@@ -19,10 +19,10 @@ This repository contains the scripts used for the comparisons and evaluations of
 ## Random Deletion Data Simulation
 
  [*Simulation/uniform_simulation/deletion_data_Simulation/uniform_simulation/*](https://github.com/kehrlab/PopDel-scripts/tree/master/Simulation/uniform_simulation/deletion_data_simulation)
-- [simulate_deletion_haplotype.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/uniform_simulation/deletion_data_Simulation/uniform_simulation/simulate_deletion_haplotype.py): Simulation of haplotypes.
-- [simulate_deletions.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/uniform_simulation/deletion_data_Simulation/uniform_simulation/simulate_deletions.py): Simulation of reads of the samples
-- [simulate.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/uniform_simulation/deletion_data_Simulation/uniform_simulation/simulate.sh): Wrapping above scripts and aligning the simulated reads to the GRCh38.
-- [simulation2vcf.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/uniform_simulation/deletion_data_Simulation/uniform_simulation/simulation2vcf.py): Writing the simulated deletions to VCF-files.
+- [simulate_deletion_haplotype.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/uniform_simulation/deletion_data_simulation/simulate_deletion_haplotype.py): Simulation of haplotypes.
+- [simulate_deletions.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/uniform_simulation/deletion_data_simulation/simulate_deletions.py): Simulation of reads of the samples
+- [simulate.sh](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/uniform_simulation/deletion_data_simulation/simulate.sh): Wrapping above scripts and aligning the simulated reads to the GRCh38.
+- [simulation2vcf.py](https://github.com/kehrlab/PopDel-scripts/blob/master/Simulation/uniform_simulation/deletion_data_simulation/simulation2vcf.py): Writing the simulated deletions to VCF-files.
 
 Note on random seeds: We used 0 as random seed to simulate 2000 deletions with the script 'simulate_deletions.txt'. The random seed used for the simulation of reads using 'simulate.sh' was 1 for the first sample, 2 for the the second sample and so on.
 
